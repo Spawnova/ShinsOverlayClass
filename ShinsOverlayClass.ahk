@@ -1,7 +1,5 @@
 ;Direct2d overlay class by Spawnova (5/27/2022)
 ;
-;Does not currently work with windows dpi scaling - I plan to look into this more in the future
-;
 ;I'm not a professional programmer, I do this for fun, if it doesn't work for you I can try and help
 ;but I can't promise I will be able to solve the issue
 ;
@@ -103,6 +101,8 @@ class ShinsOverlayClass {
 		}
 		this.stroke := stroke
 		numput(1,this.rtPtr,8,"uint")
+		numput(96,this.rtPtr,12,"float")
+		numput(96,this.rtPtr,16,"float")
 		numput(hwnd,this.hrtPtr,0,"Ptr")
 		numput(width,this.hrtPtr,a_ptrsize,"uint")
 		numput(height,this.hrtPtr,a_ptrsize+4,"uint")
