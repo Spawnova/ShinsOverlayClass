@@ -49,7 +49,6 @@ GetMousePos(byref x, byref y, realRegionOnly:=0)
 
 ## Notes
 
-* Only for AHK_L, V2 is not supported
-
-* I've only tested on my end and can confirm it works for me using 32/64 bit ahk L (ahk_v1) on windows 10
-* if it doesn't work for you let me know, I may be able to help, or may not just depends.
+* Only for AHK V1.1, V2 is not supported.
+* I've only tested on my end and can confirm it works for me using 32/64 bit AHK_L (AHK V1.1) on Windows 10.
+* If it doesn't work for you let me know, I may be able to help, or maybe not, just depends.
