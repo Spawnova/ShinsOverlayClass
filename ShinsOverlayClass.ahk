@@ -2,8 +2,8 @@
 ;
 ;Does not currently work with windows dpi scaling - I plan to look into this more in the future
 ;
-;I'm not a professional programmer, I do this for fun, it it doesn't work for you I can try and help
-;but I can't promise I wil be able to solve the issue
+;I'm not a professional programmer, I do this for fun, if it doesn't work for you I can try and help
+;but I can't promise I will be able to solve the issue
 ;
 ;Special thanks to teadrinker for helping me understand some 64bit param structures! -> https://www.autohotkey.com/boards/viewtopic.php?f=76&t=105420
 
@@ -40,7 +40,7 @@ class ShinsOverlayClass {
 		
 		;Generally with windows there are invisible borders that allow
 		;the window to be resized, but it makes the window larger
-		;these values should contain the window x,y offset and width,height for actual postion and size
+		;these values should contain the window x, y offset and width, height for actual postion and size
 		this.realX := 0
 		this.realY := 0
 		this.realWidth := 0
@@ -151,7 +151,7 @@ class ShinsOverlayClass {
 	
 	AttachToWindow(title,AttachToClientArea:=0,foreground:=1) {
 		if (title = "") {
-			this.Err("AttachToWindow: Error","Expected title string, but empty variable was supplied")
+			this.Err("AttachToWindow: Error","Expected title string, but empty variable was supplied!")
 			return 0
 		}
 		if (!this.AttachHwnd := winexist(title)) {
@@ -285,7 +285,7 @@ class ShinsOverlayClass {
 	;text				:				The text to be drawn
 	;x					:				X position
 	;y					:				Y position
-	;color				:				Color in 0xAARRGGBB or 0xRRGGBB format (if 0xRRGGBB then alpha is set to 255)
+	;color				:				Color in 0xAARRGGBB or 0xRRGGBB format (if 0xRRGGBB then alpha is set to FF (255))
 	;size				:				Font size
 	;fontName			:				Font name (must be installed)
 	;dropShadowColor	:				If a valid color a drop shadow will be added to the text
@@ -317,7 +317,7 @@ class ShinsOverlayClass {
 	;y					:				Y position
 	;w					:				Width of ellipse
 	;h					:				Height of ellipse
-	;color				:				Color in 0xAARRGGBB or 0xRRGGBB format (if 0xRRGGBB then alpha is set to 255)
+	;color				:				Color in 0xAARRGGBB or 0xRRGGBB format (if 0xRRGGBB then alpha is set to FF (255))
 	;thickness			:				Thickness of the line
 	;
 	;return				;				Void
@@ -339,7 +339,7 @@ class ShinsOverlayClass {
 	;y					:				Y position
 	;w					:				Width of ellipse
 	;h					:				Height of ellipse
-	;color				:				Color in 0xAARRGGBB or 0xRRGGBB format (if 0xRRGGBB then alpha is set to 255)
+	;color				:				Color in 0xAARRGGBB or 0xRRGGBB format (if 0xRRGGBB then alpha is set to FF (255))
 	;
 	;return				;				Void
 	
@@ -360,7 +360,7 @@ class ShinsOverlayClass {
 	;y					:				Y position
 	;w					:				Width of rectangle
 	;h					:				Height of rectangle
-	;color				:				Color in 0xAARRGGBB or 0xRRGGBB format (if 0xRRGGBB then alpha is set to 255)
+	;color				:				Color in 0xAARRGGBB or 0xRRGGBB format (if 0xRRGGBB then alpha is set to FF (255))
 	;thickness			:				Thickness of the line
 	;
 	;return				;				Void
@@ -382,7 +382,7 @@ class ShinsOverlayClass {
 	;y					:				Y position
 	;w					:				Width of rectangle
 	;h					:				Height of rectangle
-	;color				:				Color in 0xAARRGGBB or 0xRRGGBB format (if 0xRRGGBB then alpha is set to 255)
+	;color				:				Color in 0xAARRGGBB or 0xRRGGBB format (if 0xRRGGBB then alpha is set to FF (255))
 	;
 	;return				;				Void
 	
@@ -403,7 +403,7 @@ class ShinsOverlayClass {
 	;y1					:				Y position for line start
 	;x2					:				X position for line end
 	;y2					:				Y position for line end
-	;color				:				Color in 0xAARRGGBB or 0xRRGGBB format (if 0xRRGGBB then alpha is set to 255)
+	;color				:				Color in 0xAARRGGBB or 0xRRGGBB format (if 0xRRGGBB then alpha is set to FF (255))
 	;thickness			:				Thickness of the line
 	;
 	;return				;				Void
