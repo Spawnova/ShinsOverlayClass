@@ -61,6 +61,7 @@ class ShinsOverlayClass {
 		this.offX := 0
 		this.offY := 0
 		this.lastCol := 0
+		this.drawing := 0
 		
 		this.LoadLib("d2d1","dwrite","dwmapi","gdiplus")
 		VarSetCapacity(gsi, 24, 0)
@@ -200,9 +201,12 @@ class ShinsOverlayClass {
 	BeginDraw() {
 		if (this.attachHWND) {
 			if (!DllCall("GetWindowRect","ptr",this.attachHWND,"ptr",this.tBufferPtr) or (this.attachForeground and DllCall("GetForegroundWindow") != this.attachHWND)) {
-				DllCall(this.vTable(this.renderTarget,48),"Ptr",this.renderTarget)
-				DllCall(this.vTable(this.renderTarget,47),"Ptr",this.renderTarget,"Ptr",this.clrPtr)
-				this.EndDraw()
+				if (this.drawing) {
+					DllCall(this.vTable(this.renderTarget,48),"Ptr",this.renderTarget)
+					DllCall(this.vTable(this.renderTarget,47),"Ptr",this.renderTarget,"Ptr",this.clrPtr)
+					this.EndDraw()
+					this.drawing := 0
+				}
 				return 0
 			}
 			x := NumGet(this.tBufferPtr,0,"int")
@@ -221,6 +225,7 @@ class ShinsOverlayClass {
 				this.SetPosition(x,y)
 			}
 		}
+		this.drawing := 1
 		DllCall(this.vTable(this.renderTarget,48),"Ptr",this.renderTarget)
 		DllCall(this.vTable(this.renderTarget,47),"Ptr",this.renderTarget,"Ptr",this.clrPtr)
 		return 1
@@ -235,7 +240,8 @@ class ShinsOverlayClass {
 	;Notes				;				Must always call EndDraw to finish drawing and update the overlay
 	
 	EndDraw() {
-		DllCall(this.vTable(this.renderTarget,49),"Ptr",this.renderTarget,"int64*",tag1,"int64*",tag2)
+		if (this.drawing)
+			DllCall(this.vTable(this.renderTarget,49),"Ptr",this.renderTarget,"int64*",tag1,"int64*",tag2)
 	}
 	
 	
@@ -528,6 +534,8 @@ class ShinsOverlayClass {
 	;
 	;x					:				X position to move the window to (screen space)
 	;y					:				Y position to move the window to (screen space)
+	;w					:				New Width (only applies when not attached)
+	;h					:				New Height (only applies when not attached)
 	;
 	;return				;				Void
 	;
@@ -536,6 +544,12 @@ class ShinsOverlayClass {
 	SetPosition(x,y,w:=0,h:=0) {
 		this.x := x
 		this.y := y
+		if (!this.attachHWND and w != 0 and h != 0) {
+			VarSetCapacity(newSize,16)
+			NumPut(this.width := w,newSize,0,"uint")
+			NumPut(this.height := h,newSize,4,"uint")
+			DllCall(this.vTable(this.renderTarget,58),"Ptr",this.renderTarget,"ptr",&newsize)
+		}
 		DllCall("MoveWindow","Ptr",this.hwnd,"int",x,"int",y,"int",this.width,"int",this.height,"char",1)
 	}
 	
@@ -563,6 +577,7 @@ class ShinsOverlayClass {
 	;
 	;&x					:				X position of mouse to return
 	;&y					:				Y position of mouse to return
+	;realRegionOnly		:				Return 1 only if in the real region, which does not include the invisible borders, (client area does not have borders)
 	;
 	;return				;				Returns 1 if mouse within window/client region; 0 otherwise
 	
