@@ -32,9 +32,9 @@ class ShinsOverlayClass {
 		this.height := height		;overlay height
 		this.x2 := x_orTitle+width
 		this.y2 := y+height
-		this.attachwnd := 0			;HWND of the attached window, 0 if not attached
+		this.attachHWND := 0			;HWND of the attached window, 0 if not attached
 		this.attachClient := 0		;1 if using client space, 0 otherwise
-		this.attachForeground := 0	;1 if overlay is only drawn when the attached window is focused; 0 otherwise
+		this.attachForeground := 0	;1 if overlay is only drawn when the attached window is the active window; 0 otherwise
 		
 		;Generally with windows there are invisible borders that allow
 		;the window to be resized, but it makes the window larger
@@ -72,7 +72,7 @@ class ShinsOverlayClass {
 
 		gui %guiID%: +hwndhwnd -Caption +E0x20 +E0x80000 +AlwaysOnTop +ToolWindow
 		this.hwnd := hwnd
-		dllcall("ShowWindow","ptr",this.hwnd,"uint",8)
+		DllCall("ShowWindow","ptr",this.hwnd,"uint",8)
 
 		this.tBufferPtr := this.SetVarCapacity("ttBuffer",4096)
 		this.rect1Ptr := this.SetVarCapacity("_rect1",64)
@@ -82,8 +82,8 @@ class ShinsOverlayClass {
 		this.matrixPtr := this.SetVarCapacity("_matrix",64)
 		this.colPtr := this.SetVarCapacity("_colPtr",64)
 		this.clrPtr := this.SetVarCapacity("_clrPtr",64)
-		varsetcapacity(margins,16)
-		numput(-1,margins,0,"int"), numput(-1,margins,4,"int"), numput(-1,margins,8,"int"), numput(-1,margins,12,"int")
+		VarSetCapacity(margins,16)
+		NumPut(-1,margins,0,"int"), NumPut(-1,margins,4,"int"), NumPut(-1,margins,8,"int"), NumPut(-1,margins,12,"int")
 		if (DllCall("dwmapi\DwmExtendFrameIntoClientArea","Ptr",hwnd,"ptr",&margins) != 0) {
 			this.Err("Problem with DwmExtendFrameIntoClientArea","overlay will not function")
 			return
@@ -94,25 +94,34 @@ class ShinsOverlayClass {
 			return
 		}
 		this.factory := factory
-		numput(1,this.tBufferPtr,16,"float")
+		NumPut(1,this.tBufferPtr,16,"float")
 		if (DllCall(this.vTable(this.factory,11),"ptr",this.factory,"ptr",this.tBufferPtr,"ptr",0,"uint",0,"ptr*",stroke) != 0) {
 			this.Err("Problem creating stroke","overlay will not function")
 			return
 		}
 		this.stroke := stroke
-		numput(1,this.rtPtr,8,"uint")
-		numput(96,this.rtPtr,12,"float")
-		numput(96,this.rtPtr,16,"float")
-		numput(hwnd,this.hrtPtr,0,"Ptr")
-		numput(width,this.hrtPtr,a_ptrsize,"uint")
-		numput(height,this.hrtPtr,a_ptrsize+4,"uint")
-		numput(2,this.hrtPtr,a_ptrsize+8,"uint")
+		NumPut(2,this.tBufferPtr,0,"uint")
+		NumPut(2,this.tBufferPtr,4,"uint")
+		NumPut(2,this.tBufferPtr,12,"uint")
+		NumPut(1,this.tBufferPtr,16,"float")
+		if (DllCall(this.vTable(this.factory,11),"ptr",this.factory,"ptr",this.tBufferPtr,"ptr",0,"uint",0,"ptr*",stroke) != 0) {
+			this.Err("Problem creating rounded stroke","overlay will not function")
+			return
+		}
+		this.strokeRounded := stroke
+		NumPut(1,this.rtPtr,8,"uint")
+		NumPut(96,this.rtPtr,12,"float")
+		NumPut(96,this.rtPtr,16,"float")
+		NumPut(hwnd,this.hrtPtr,0,"Ptr")
+		NumPut(width,this.hrtPtr,a_ptrsize,"uint")
+		NumPut(height,this.hrtPtr,a_ptrsize+4,"uint")
+		NumPut(2,this.hrtPtr,a_ptrsize+8,"uint")
 		if (DllCall(this.vTable(this.factory,14),"Ptr",this.factory,"Ptr",this.rtPtr,"ptr",this.hrtPtr,"Ptr*",renderTarget) != 0) {
 			this.Err("Problem creating renderTarget","overlay will not function")
 			return
 		}
 		this.renderTarget := renderTarget
-		numput(1,this.matrixPtr,0,"float")
+		NumPut(1,this.matrixPtr,0,"float")
 		this.SetIdentity(4)
 		if (DllCall(this.vTable(this.renderTarget,8),"Ptr",this.renderTarget,"Ptr",this.colPtr,"Ptr",this.matrixPtr,"Ptr*",brush) != 0) {
 			this.Err("Problem creating brush","overlay will not function")
@@ -154,18 +163,18 @@ class ShinsOverlayClass {
 			this.Err("AttachToWindow: Error","Expected title string, but empty variable was supplied!")
 			return 0
 		}
-		if (!this.AttachHwnd := winexist(title)) {
+		if (!this.attachHWND := winexist(title)) {
 			this.Err("AttachToWindow: Error","Could not find window - " title)
 			return 0
 		}
 		if (AttachToClientArea) {
-			if (!dllcall("GetWindowRect","ptr",this.AttachHwnd,"ptr",this.tBufferPtr)) {
+			if (!DllCall("GetWindowRect","ptr",this.attachHWND,"ptr",this.tBufferPtr)) {
 				this.Err("AttachToWindow: Error","Problem getting client rect, is window minimized?")
 				return 0
 			}
 			this.AdjustClient(x,y,w,h)
 		} else {
-			if (!dllcall("GetWindowRect","ptr",this.AttachHwnd,"ptr",this.tBufferPtr)) {
+			if (!DllCall("GetWindowRect","ptr",this.attachHWND,"ptr",this.tBufferPtr)) {
 				this.Err("AttachToWindow: Error","Problem getting window rect, is window minimized?")
 				return 0
 			}
@@ -173,10 +182,10 @@ class ShinsOverlayClass {
 		}
 		this.attachClient := AttachToClientArea
 		this.attachForeground := foreground
-		varsetcapacity(newSize,16)
-		numput(this.width,newSize,0,"uint")
-		numput(this.height,newSize,4,"uint")
-		dllcall(this.vTable(this.renderTarget,58),"Ptr",this.renderTarget,"ptr",&newsize)
+		VarSetCapacity(newSize,16)
+		NumPut(this.width,newSize,0,"uint")
+		NumPut(this.height,newSize,4,"uint")
+		DllCall(this.vTable(this.renderTarget,58),"Ptr",this.renderTarget,"ptr",&newsize)
 		this.SetPosition(x,y,this.width,this.height)
 	}
 	
@@ -189,31 +198,31 @@ class ShinsOverlayClass {
 	;Notes				;				Must always call EndDraw to finish drawing and update the overlay
 	
 	BeginDraw() {
-		if (this.AttachHwnd) {
-			if (!dllcall("GetWindowRect","ptr",this.AttachHwnd,"ptr",this.tBufferPtr) or (this.attachForeground and dllcall("GetForegroundWindow") != this.attachHwnd)) {
-				dllcall(this.vTable(this.renderTarget,48),"Ptr",this.renderTarget)
-				dllcall(this.vTable(this.renderTarget,47),"Ptr",this.renderTarget,"Ptr",this.clrPtr)
+		if (this.attachHWND) {
+			if (!DllCall("GetWindowRect","ptr",this.attachHWND,"ptr",this.tBufferPtr) or (this.attachForeground and DllCall("GetForegroundWindow") != this.attachHWND)) {
+				DllCall(this.vTable(this.renderTarget,48),"Ptr",this.renderTarget)
+				DllCall(this.vTable(this.renderTarget,47),"Ptr",this.renderTarget,"Ptr",this.clrPtr)
 				this.EndDraw()
 				return 0
 			}
-			x := numget(this.tBufferPtr,0,"int")
-			y := numget(this.tBufferPtr,4,"int")
-			w := numget(this.tBufferPtr,8,"int")-x
-			h := numget(this.tBufferPtr,12,"int")-y
+			x := NumGet(this.tBufferPtr,0,"int")
+			y := NumGet(this.tBufferPtr,4,"int")
+			w := NumGet(this.tBufferPtr,8,"int")-x
+			h := NumGet(this.tBufferPtr,12,"int")-y
 			if ((w<<16)+h != this.lastSize) {
 				this.AdjustWindow(x,y,w,h)
-				varsetcapacity(newSize,16)
-				numput(this.width,newSize,0,"uint")
-				numput(this.height,newSize,4,"uint")
-				dllcall(this.vTable(this.renderTarget,58),"Ptr",this.renderTarget,"ptr",&newsize)
+				VarSetCapacity(newSize,16)
+				NumPut(this.width,newSize,0,"uint")
+				NumPut(this.height,newSize,4,"uint")
+				DllCall(this.vTable(this.renderTarget,58),"Ptr",this.renderTarget,"ptr",&newsize)
 				this.SetPosition(x,y)
 			} else if ((x<<16)+y != this.lastPos) {
 				this.AdjustWindow(x,y,w,h)
 				this.SetPosition(x,y)
 			}
 		}
-		dllcall(this.vTable(this.renderTarget,48),"Ptr",this.renderTarget)
-		dllcall(this.vTable(this.renderTarget,47),"Ptr",this.renderTarget,"Ptr",this.clrPtr)
+		DllCall(this.vTable(this.renderTarget,48),"Ptr",this.renderTarget)
+		DllCall(this.vTable(this.renderTarget,47),"Ptr",this.renderTarget,"Ptr",this.clrPtr)
 		return 1
 	}
 	
@@ -226,7 +235,7 @@ class ShinsOverlayClass {
 	;Notes				;				Must always call EndDraw to finish drawing and update the overlay
 	
 	EndDraw() {
-		dllcall(this.vTable(this.renderTarget,49),"Ptr",this.renderTarget,"int64*",tag1,"int64*",tag2)
+		DllCall(this.vTable(this.renderTarget,49),"Ptr",this.renderTarget,"int64*",tag1,"int64*",tag2)
 	}
 	
 	
@@ -252,22 +261,22 @@ class ShinsOverlayClass {
 		}
 		x := dstX-(drawCentered?i.w/2:0)
 		y := dstY-(drawCentered?i.h/2:0)
-		numput(x,this.rect1Ptr,0,"float")
-		numput(y,this.rect1Ptr,4,"float")
-		numput(x + (dstW=0?i.w:dstW),this.rect1Ptr,8,"float")
-		numput(y + (dstH=0?i.h:dstH),this.rect1Ptr,12,"float")
-		numput(srcX,this.rect2Ptr,0,"float")
-		numput(srcY,this.rect2Ptr,4,"float")
-		numput(srcX + (srcW=0?i.w:srcW),this.rect2Ptr,8,"float")
-		numput(srcY + (srcH=0?i.h:srcH),this.rect2Ptr,12,"float")
+		NumPut(x,this.rect1Ptr,0,"float")
+		NumPut(y,this.rect1Ptr,4,"float")
+		NumPut(x + (dstW=0?i.w:dstW),this.rect1Ptr,8,"float")
+		NumPut(y + (dstH=0?i.h:dstH),this.rect1Ptr,12,"float")
+		NumPut(srcX,this.rect2Ptr,0,"float")
+		NumPut(srcY,this.rect2Ptr,4,"float")
+		NumPut(srcX + (srcW=0?i.w:srcW),this.rect2Ptr,8,"float")
+		NumPut(srcY + (srcH=0?i.h:srcH),this.rect2Ptr,12,"float")
 		
 		if (rotation != 0) {
 			if (this.bits) {
-				numput(dstX+(dstW/2),this.tbufferPtr,0,"float")
-				numput(dstY+(dstH/2),this.tbufferPtr,4,"float")
-				dllcall("d2d1\D2D1MakeRotateMatrix","float",rotation,"double",numget(this.tBufferPtr,"double"),"ptr",this.matrixPtr)
+				NumPut(dstX+(dstW/2),this.tBufferPtr,0,"float")
+				NumPut(dstY+(dstH/2),this.tBufferPtr,4,"float")
+				DllCall("d2d1\D2D1MakeRotateMatrix","float",rotation,"double",NumGet(this.tBufferPtr,"double"),"ptr",this.matrixPtr)
 			} else {
-				dllcall("d2d1\D2D1MakeRotateMatrix","float",rotation,"float",dstX+(dstW/2),"float",dstY+(dstH/2),"ptr",this.matrixPtr)
+				DllCall("d2d1\D2D1MakeRotateMatrix","float",rotation,"float",dstX+(dstW/2),"float",dstY+(dstH/2),"ptr",this.matrixPtr)
 			}
 			DllCall(this.vTable(this.renderTarget,30),"ptr",this.renderTarget,"ptr",this.matrixPtr)
 			DllCall(this.vTable(this.renderTarget,26),"ptr",this.renderTarget,"ptr",i.p,"ptr",this.rect1Ptr,"float",1,"uint",this.interpolationMode,"ptr",this.rect2Ptr)
@@ -302,11 +311,11 @@ class ShinsOverlayClass {
 			this.DrawText(text,x+dropx,y+dropy,dropShadowColor,size,fontName)
 		}
 		this.SetBrushColor(color)
-		numput(x,this.tbufferPtr,0,"float")
-		numput(y,this.tbufferPtr,4,"float")
-		numput(x+this.width,this.tbufferPtr,8,"float")
-		numput(y+this.height,this.tbufferPtr,12,"float")
-		dllcall(this.vTable(this.renderTarget,27),"ptr",this.renderTarget,"wstr",text,"uint",strlen(text),"ptr",p,"ptr",this.tbufferPtr,"ptr",this.brush,"uint",0,"uint",0)
+		NumPut(x,this.tBufferPtr,0,"float")
+		NumPut(y,this.tBufferPtr,4,"float")
+		NumPut(x+this.width,this.tBufferPtr,8,"float")
+		NumPut(y+this.height,this.tBufferPtr,12,"float")
+		DllCall(this.vTable(this.renderTarget,27),"ptr",this.renderTarget,"wstr",text,"uint",strlen(text),"ptr",p,"ptr",this.tBufferPtr,"ptr",this.brush,"uint",0,"uint",0)
 	}
 	
 	
@@ -324,11 +333,11 @@ class ShinsOverlayClass {
 	
 	DrawEllipse(x, y, w, h, color, thickness:=1) {
 		this.SetBrushColor(color)
-		numput(x,this.tBufferPtr,0,"float")
-		numput(y,this.tBufferPtr,4,"float")
-		numput(w,this.tBufferPtr,8,"float")
-		numput(h,this.tBufferPtr,12,"float")
-		dllcall(this.vTable(this.renderTarget,20),"Ptr",this.renderTarget,"Ptr",this.tBufferPtr,"ptr",this.brush,"float",thickness,"ptr",this.stroke)
+		NumPut(x,this.tBufferPtr,0,"float")
+		NumPut(y,this.tBufferPtr,4,"float")
+		NumPut(w,this.tBufferPtr,8,"float")
+		NumPut(h,this.tBufferPtr,12,"float")
+		DllCall(this.vTable(this.renderTarget,20),"Ptr",this.renderTarget,"Ptr",this.tBufferPtr,"ptr",this.brush,"float",thickness,"ptr",this.stroke)
 	}
 	
 	
@@ -345,11 +354,52 @@ class ShinsOverlayClass {
 	
 	FillEllipse(x, y, w, h, color) {
 		this.SetBrushColor(color)
-		numput(x,this.tBufferPtr,0,"float")
-		numput(y,this.tBufferPtr,4,"float")
-		numput(w,this.tBufferPtr,8,"float")
-		numput(h,this.tBufferPtr,12,"float")
-		dllcall(this.vTable(this.renderTarget,21),"Ptr",this.renderTarget,"Ptr",this.tBufferPtr,"ptr",this.brush)
+		NumPut(x,this.tBufferPtr,0,"float")
+		NumPut(y,this.tBufferPtr,4,"float")
+		NumPut(w,this.tBufferPtr,8,"float")
+		NumPut(h,this.tBufferPtr,12,"float")
+		DllCall(this.vTable(this.renderTarget,21),"Ptr",this.renderTarget,"Ptr",this.tBufferPtr,"ptr",this.brush)
+	}
+	
+	
+	;####################################################################################################################################################################################################################################
+	;DrawCircle
+	;
+	;x					:				X position
+	;y					:				Y position
+	;radius				:				Radius of circle
+	;color				:				Color in 0xAARRGGBB or 0xRRGGBB format (if 0xRRGGBB then alpha is set to FF (255))
+	;thickness			:				Thickness of the line
+	;
+	;return				;				Void
+	
+	DrawCircle(x, y, radius, color, thickness:=1) {
+		this.SetBrushColor(color)
+		NumPut(x,this.tBufferPtr,0,"float")
+		NumPut(y,this.tBufferPtr,4,"float")
+		NumPut(radius,this.tBufferPtr,8,"float")
+		NumPut(radius,this.tBufferPtr,12,"float")
+		DllCall(this.vTable(this.renderTarget,20),"Ptr",this.renderTarget,"Ptr",this.tBufferPtr,"ptr",this.brush,"float",thickness,"ptr",this.stroke)
+	}
+	
+	
+	;####################################################################################################################################################################################################################################
+	;FillCircle
+	;
+	;x					:				X position
+	;y					:				Y position
+	;radius				:				Radius of circle
+	;color				:				Color in 0xAARRGGBB or 0xRRGGBB format (if 0xRRGGBB then alpha is set to FF (255))
+	;
+	;return				;				Void
+	
+	FillCircle(x, y, radius, color) {
+		this.SetBrushColor(color)
+		NumPut(x,this.tBufferPtr,0,"float")
+		NumPut(y,this.tBufferPtr,4,"float")
+		NumPut(radius,this.tBufferPtr,8,"float")
+		NumPut(radius,this.tBufferPtr,12,"float")
+		DllCall(this.vTable(this.renderTarget,21),"Ptr",this.renderTarget,"Ptr",this.tBufferPtr,"ptr",this.brush)
 	}
 	
 	
@@ -367,11 +417,11 @@ class ShinsOverlayClass {
 	
 	DrawRectangle(x, y, w, h, color, thickness:=1) {
 		this.SetBrushColor(color)
-		numput(x,this.tBufferPtr,0,"float")
-		numput(y,this.tBufferPtr,4,"float")
-		numput(x+w,this.tBufferPtr,8,"float")
-		numput(y+h,this.tBufferPtr,12,"float")
-		dllcall(this.vTable(this.renderTarget,16),"Ptr",this.renderTarget,"Ptr",this.tBufferPtr,"ptr",this.brush,"float",thickness,"ptr",this.stroke)
+		NumPut(x,this.tBufferPtr,0,"float")
+		NumPut(y,this.tBufferPtr,4,"float")
+		NumPut(x+w,this.tBufferPtr,8,"float")
+		NumPut(y+h,this.tBufferPtr,12,"float")
+		DllCall(this.vTable(this.renderTarget,16),"Ptr",this.renderTarget,"Ptr",this.tBufferPtr,"ptr",this.brush,"float",thickness,"ptr",this.stroke)
 	}
 	
 	
@@ -388,11 +438,62 @@ class ShinsOverlayClass {
 	
 	FillRectangle(x, y, w, h, color) {
 		this.SetBrushColor(color)
-		numput(x,this.tBufferPtr,0,"float")
-		numput(y,this.tBufferPtr,4,"float")
-		numput(x+w,this.tBufferPtr,8,"float")
-		numput(y+h,this.tBufferPtr,12,"float")
-		dllcall(this.vTable(this.renderTarget,17),"Ptr",this.renderTarget,"Ptr",this.tBufferPtr,"ptr",this.brush)
+		NumPut(x,this.tBufferPtr,0,"float")
+		NumPut(y,this.tBufferPtr,4,"float")
+		NumPut(x+w,this.tBufferPtr,8,"float")
+		NumPut(y+h,this.tBufferPtr,12,"float")
+		DllCall(this.vTable(this.renderTarget,17),"Ptr",this.renderTarget,"Ptr",this.tBufferPtr,"ptr",this.brush)
+	}
+	
+	
+	;####################################################################################################################################################################################################################################
+	;DrawRoundedRectangle
+	;
+	;x					:				X position
+	;y					:				Y position
+	;w					:				Width of rectangle
+	;h					:				Height of rectangle
+	;radiusX			:				The x-radius for the quarter ellipse that is drawn to replace every corner of the rectangle.
+	;radiusY			:				The y-radius for the quarter ellipse that is drawn to replace every corner of the rectangle.
+	;color				:				Color in 0xAARRGGBB or 0xRRGGBB format (if 0xRRGGBB then alpha is set to FF (255))
+	;thickness			:				Thickness of the line
+	;
+	;return				;				Void
+	
+	DrawRoundedRectangle(x, y, w, h, radiusX, radiusY, color, thickness:=1) {
+		this.SetBrushColor(color)
+		NumPut(x,this.tBufferPtr,0,"float")
+		NumPut(y,this.tBufferPtr,4,"float")
+		NumPut(x+w,this.tBufferPtr,8,"float")
+		NumPut(y+h,this.tBufferPtr,12,"float")
+		NumPut(radiusX,this.tBufferPtr,16,"float")
+		NumPut(radiusY,this.tBufferPtr,20,"float")
+		DllCall(this.vTable(this.renderTarget,18),"Ptr",this.renderTarget,"Ptr",this.tBufferPtr,"ptr",this.brush,"float",thickness,"ptr",this.stroke)
+	}
+	
+	
+	;####################################################################################################################################################################################################################################
+	;FillRectangle
+	;
+	;x					:				X position
+	;y					:				Y position
+	;w					:				Width of rectangle
+	;h					:				Height of rectangle
+	;radiusX			:				The x-radius for the quarter ellipse that is drawn to replace every corner of the rectangle.
+	;radiusY			:				The y-radius for the quarter ellipse that is drawn to replace every corner of the rectangle.
+	;color				:				Color in 0xAARRGGBB or 0xRRGGBB format (if 0xRRGGBB then alpha is set to FF (255))
+	;
+	;return				;				Void
+	
+	FillRoundedRectangle(x, y, w, h, radiusX, radiusY, color) {
+		this.SetBrushColor(color)
+		NumPut(x,this.tBufferPtr,0,"float")
+		NumPut(y,this.tBufferPtr,4,"float")
+		NumPut(x+w,this.tBufferPtr,8,"float")
+		NumPut(y+h,this.tBufferPtr,12,"float")
+		NumPut(radiusX,this.tBufferPtr,16,"float")
+		NumPut(radiusY,this.tBufferPtr,20,"float")
+		DllCall(this.vTable(this.renderTarget,19),"Ptr",this.renderTarget,"Ptr",this.tBufferPtr,"ptr",this.brush)
 	}
 	
 	
@@ -408,16 +509,16 @@ class ShinsOverlayClass {
 	;
 	;return				;				Void
 
-	DrawLine(x1,y1,x2,y2,color,thickness:=1) {
+	DrawLine(x1,y1,x2,y2,color,thickness:=1,rounded:=0) {
 		this.SetBrushColor(color)
 		if (this.bits) {
-			numput(x1,this.tbufferPtr,0,"float")  ;Special thanks to teadrinker for helping me
-			numput(y1,this.tbufferPtr,4,"float")  ;with these params!
-			numput(x2,this.tbufferPtr,8,"float")
-			numput(y2,this.tbufferPtr,12,"float")
-			dllcall(this.vTable(this.renderTarget,15),"Ptr",this.renderTarget,"Double",numget(this.tbufferPtr,0,"double"),"Double",numget(this.tbufferPtr,8,"double"),"ptr",this.brush,"float",thickness,"ptr",this.stroke)
+			NumPut(x1,this.tBufferPtr,0,"float")  ;Special thanks to teadrinker for helping me
+			NumPut(y1,this.tBufferPtr,4,"float")  ;with these params!
+			NumPut(x2,this.tBufferPtr,8,"float")
+			NumPut(y2,this.tBufferPtr,12,"float")
+			DllCall(this.vTable(this.renderTarget,15),"Ptr",this.renderTarget,"Double",NumGet(this.tBufferPtr,0,"double"),"Double",NumGet(this.tBufferPtr,8,"double"),"ptr",this.brush,"float",thickness,"ptr",(rounded?this.strokeRounded:this.stroke))
 		} else {
-			dllcall(this.vTable(this.renderTarget,15),"Ptr",this.renderTarget,"float",x1,"float",y1,"float",x2,"float",y2,"ptr",this.brush,"float",thickness,"ptr",this.stroke)
+			DllCall(this.vTable(this.renderTarget,15),"Ptr",this.renderTarget,"float",x1,"float",y1,"float",x2,"float",y2,"ptr",this.brush,"float",thickness,"ptr",(rounded?this.strokeRounded:this.stroke))
 		}
 		
 	}
@@ -435,7 +536,7 @@ class ShinsOverlayClass {
 	SetPosition(x,y,w:=0,h:=0) {
 		this.x := x
 		this.y := y
-		dllcall("MoveWindow","Ptr",this.hwnd,"int",x,"int",y,"int",this.width,"int",this.height,"char",1)
+		DllCall("MoveWindow","Ptr",this.hwnd,"int",x,"int",y,"int",this.width,"int",this.height,"char",1)
 	}
 	
 	
@@ -466,9 +567,9 @@ class ShinsOverlayClass {
 	;return				;				Returns 1 if mouse within window/client region; 0 otherwise
 	
 	GetMousePos(byref x, byref y, realRegionOnly:=0) {
-		dllcall("GetCursorPos","ptr",this.tbufferPtr)
-		x := numget(this.tbufferPtr,0,"int")
-		y := numget(this.tbufferPtr,4,"int")
+		DllCall("GetCursorPos","ptr",this.tBufferPtr)
+		x := NumGet(this.tBufferPtr,0,"int")
+		y := NumGet(this.tBufferPtr,4,"int")
 		if (!realRegionOnly) {
 			inside := (x >= this.x and y >= this.y and x <= this.x2 and y <= this.y2)
 			x += this.offX
@@ -498,12 +599,12 @@ class ShinsOverlayClass {
 	;  internal functions used by the class
 	;########################################## 
 	AdjustWindow(byref x,byref y,byref w,byref h) {
-		dllcall("GetWindowInfo","ptr",this.attachHwnd,"ptr",this.tbufferPtr)
+		DllCall("GetWindowInfo","ptr",this.attachHWND,"ptr",this.tBufferPtr)
 		pp := (this.attachClient ? 20 : 4)
-		x1 := numget(this.tbufferPtr,pp,"int")
-		y1 := numget(this.tbufferPtr,pp+4,"int")
-		x2 := numget(this.tbufferPtr,pp+8,"int")
-		y2 := numget(this.tbufferPtr,pp+12,"int")
+		x1 := NumGet(this.tBufferPtr,pp,"int")
+		y1 := NumGet(this.tBufferPtr,pp+4,"int")
+		x2 := NumGet(this.tBufferPtr,pp+8,"int")
+		y2 := NumGet(this.tBufferPtr,pp+12,"int")
 		this.width := w := x2-x1
 		this.height := h := y2-y1
 		this.x := x := x1
@@ -512,8 +613,8 @@ class ShinsOverlayClass {
 		this.y2 := y + h
 		this.lastPos := (x1<<16)+y1
 		this.lastSize := (w<<16)+h
-		hBorders := (this.attachClient ? 0 : numget(this.tbufferPtr,48,"int"))
-		vBorders := (this.attachClient ? 0 : numget(this.tbufferPtr,52,"int"))
+		hBorders := (this.attachClient ? 0 : NumGet(this.tBufferPtr,48,"int"))
+		vBorders := (this.attachClient ? 0 : NumGet(this.tBufferPtr,52,"int"))
 		this.realX := hBorders
 		this.realY := 0
 		this.realWidth := w - (hBorders*2)
@@ -524,12 +625,12 @@ class ShinsOverlayClass {
 		this.offY := -y1
 	}
 	SetIdentity(o:=0) {
-		numput(1,this.matrixPtr,o+0,"float")
-		numput(0,this.matrixPtr,o+4,"float")
-		numput(0,this.matrixPtr,o+8,"float")
-		numput(1,this.matrixPtr,o+12,"float")
-		numput(0,this.matrixPtr,o+16,"float")
-		numput(0,this.matrixPtr,o+20,"float")
+		NumPut(1,this.matrixPtr,o+0,"float")
+		NumPut(0,this.matrixPtr,o+4,"float")
+		NumPut(0,this.matrixPtr,o+8,"float")
+		NumPut(1,this.matrixPtr,o+12,"float")
+		NumPut(0,this.matrixPtr,o+16,"float")
+		NumPut(0,this.matrixPtr,o+20,"float")
 	}
 	Err(str*) {
 		s := ""
@@ -546,21 +647,21 @@ class ShinsOverlayClass {
 		if (col <= 0xFFFFFF)
 			col += 0xFF000000
 		if (col != this.lastCol) {
-			numput(((col & 0xFF0000)>>16)/255,this.colPtr,0,"float")
-			numput(((col & 0xFF00)>>8)/255,this.colPtr,4,"float")
-			numput(((col & 0xFF))/255,this.colPtr,8,"float")
-			numput((col > 0xFFFFFF ? ((col & 0xFF000000)>>24)/255 : 1),this.colPtr,12,"float")
-			dllcall(this.vTable(this.brush,8),"Ptr",this.brush,"Ptr",this.colPtr)
+			NumPut(((col & 0xFF0000)>>16)/255,this.colPtr,0,"float")
+			NumPut(((col & 0xFF00)>>8)/255,this.colPtr,4,"float")
+			NumPut(((col & 0xFF))/255,this.colPtr,8,"float")
+			NumPut((col > 0xFFFFFF ? ((col & 0xFF000000)>>24)/255 : 1),this.colPtr,12,"float")
+			DllCall(this.vTable(this.brush,8),"Ptr",this.brush,"Ptr",this.colPtr)
 			this.lastCol := col
 			return 1
 		}
 		return 0
 	}
 	vTable(a,p) {
-		return numget(numget(a+0,0,"ptr"),p*a_ptrsize,"Ptr")
+		return NumGet(NumGet(a+0,0,"ptr"),p*a_ptrsize,"Ptr")
 	}
 	_guid(guidStr,byref clsid) {
-		varsetcapacity(clsid,16)
+		VarSetCapacity(clsid,16)
 		DllCall("ole32\CLSIDFromString", "WStr", guidStr, "Ptr", &clsid)
 	}
 	SetVarCapacity(key,size,fill=0) {
@@ -600,18 +701,18 @@ class ShinsOverlayClass {
 		}	
 		DllCall("Gdiplus\GdipBitmapUnlockBits", "Ptr", bm, "Ptr", &bmdata)
 		DllCall("gdiplus\GdipDisposeImage", "ptr", bm)
-		varsetcapacity(props,64,0)
-		numput(28,props,0,"uint")
-		numput(1,props,4,"uint")
+		VarSetCapacity(props,64,0)
+		NumPut(28,props,0,"uint")
+		NumPut(1,props,4,"uint")
 		if (this.bits) {
-			numput(w,this.tbufferPtr,0,"uint")
-			numput(h,this.tbufferPtr,4,"uint")
-			if (v := dllcall(this.vTable(this.renderTarget,4),"ptr",this.renderTarget,"int64",numget(this.tbufferPtr,"int64"),"ptr",p,"uint",4 * w,"ptr",&props,"ptr*",bitmap) != 0) {
+			NumPut(w,this.tBufferPtr,0,"uint")
+			NumPut(h,this.tBufferPtr,4,"uint")
+			if (v := DllCall(this.vTable(this.renderTarget,4),"ptr",this.renderTarget,"int64",NumGet(this.tBufferPtr,"int64"),"ptr",p,"uint",4 * w,"ptr",&props,"ptr*",bitmap) != 0) {
 				this.Err("Problem creating D2D bitmap for image '" image "'")
 				return 0
 			}
 		} else {
-			if (v := dllcall(this.vTable(this.renderTarget,4),"ptr",this.renderTarget,"uint",w,"uint",h,"ptr",p,"uint",4 * w,"ptr",&props,"ptr*",bitmap) != 0) {
+			if (v := DllCall(this.vTable(this.renderTarget,4),"ptr",this.renderTarget,"uint",w,"uint",h,"ptr",p,"uint",4 * w,"ptr",&props,"ptr*",bitmap) != 0) {
 				this.Err("Problem creating D2D bitmap for image '" image "'")
 				return 0
 			}
@@ -619,7 +720,7 @@ class ShinsOverlayClass {
 		return this.imageCache[image] := {p:bitmap,w:w,h:h}
 	}
 	CacheFont(name,size) {
-		if (dllcall(this.vTable(this.wFactory,15),"ptr",this.wFactory,"wstr",name,"ptr",0,"uint",400,"uint",0,"uint",5,"float",size,"wstr","en-us","ptr*",textFormat) != 0) {
+		if (DllCall(this.vTable(this.wFactory,15),"ptr",this.wFactory,"wstr",name,"ptr",0,"uint",400,"uint",0,"uint",5,"float",size,"wstr","en-us","ptr*",textFormat) != 0) {
 			this.Err("Unable to create font: " name " (size: " size ")","Try a different font or check to see if " name " is a valid font!")
 			return 0
 		}
