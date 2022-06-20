@@ -25,6 +25,11 @@ stepsText.push("That's all folks!")
 
 overlay.GetImageDimensions("stickman.png",stickW,stickH)
 
+trails := []
+trailColor := 0xFF00FF00
+lastX := -1
+lastY := -1
+
 onmessage(0x201,"WindowMove")
 moving := false
 settimer,draw,10
@@ -38,6 +43,7 @@ if (moving) {
 		sleep 100
 	}
 	moving := false
+	lastX := lastY := -1
 }
 if (overlay.BeginDraw()) {
 	
@@ -226,6 +232,25 @@ if (overlay.BeginDraw()) {
 		overlay.DrawText("Thank you for using my class and have fun out there!",0,height*0.8,42,0xFF5BFFF5,"Courier","aCenter dsFF000000 dsx1 dsy1 w" width " h" height)
 	}
 	
+	if (overlay.GetMousePos(mx,my)) {
+		if (lastX != -1 and (lastX != mx or lastY != my)) {
+			trails.push(new mouseTrail(lastX,lastY,mx,my,trailColor))
+		}
+		lastX := mx
+		lastY := my
+	} else {
+		lastX := lastY := -1
+	}
+	
+	i := 1
+	while(i < trails.length()) {
+		if (!trails[i].draw(overlay)) {
+			trails.removeat(i)
+		} else {
+			i++
+		}
+	}
+	
 	;draw text elements
 	overlay.DrawText(stepsText[step],50,50,24,0xFFFFFFFF,"Arial","dsFF000000")
 	overlay.DrawText("Press ESC to close",overlay.width-400,50,32,0xFFCC0000,"Arial","aRight dsFF222222 w" 400-50)
@@ -272,8 +297,10 @@ return
 #if
 
 checkStep:
+trailColor := 0xFF000000 + (random(128,255)<<16) + (random(128,255)<<8) + random(128,255)
 objs := []
 if (step = 3) {
+	trailColor := 0xFFFFFF00
 	rainDir := 1.6
 	rainInc := 0.001
 } else if (step = 5) {
@@ -335,6 +362,25 @@ class Rain {
 				this.puddle := 255
 			}
 		}
+	}
+}
+
+class mouseTrail {
+	__New(x1,y1,x2,y2,color) {
+		this.x1 := x1
+		this.y1 := y1
+		this.x2 := x2
+		this.y2 := y2
+		this.alpha := (color&0xFF000000)>>24
+		this.rgb := (color&0xFFFFFF)
+	}
+	
+	Draw(o) {
+		this.alpha -= 5
+		if (this.alpha < 1)
+			return 0
+		o.DrawLine(this.x1,this.y1,this.x2,this.y2,(this.alpha<<24)+this.rgb,(this.alpha / 255) * 10,1)
+		return 1
 	}
 }
 
