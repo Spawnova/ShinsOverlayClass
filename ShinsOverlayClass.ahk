@@ -61,8 +61,8 @@ class ShinsOverlayClass {
 		this.imageCache := []
 		this.fonts := []
 		this.lastPos := 0
-		this.offX := 0
-		this.offY := 0
+		this.offX := -x_orTitle
+		this.offY := -y
 		this.lastCol := 0
 		this.drawing := 0
 		
@@ -211,6 +211,31 @@ class ShinsOverlayClass {
 	BeginDraw() {
 		if (this.attachHWND) {
 			if (!DllCall("GetWindowRect","ptr",this.attachHWND,"ptr",this.tBufferPtr) or (this.attachForeground and DllCall("GetForegroundWindow") != this.attachHWND)) {
+				if (this.drawing) {
+					DllCall(this.vTable(this.renderTarget,48),"Ptr",this.renderTarget)
+					DllCall(this.vTable(this.renderTarget,47),"Ptr",this.renderTarget,"Ptr",this.clrPtr)
+					this.EndDraw()
+					this.drawing := 0
+				}
+				return 0
+			}
+			x := NumGet(this.tBufferPtr,0,"int")
+			y := NumGet(this.tBufferPtr,4,"int")
+			w := NumGet(this.tBufferPtr,8,"int")-x
+			h := NumGet(this.tBufferPtr,12,"int")-y
+			if ((w<<16)+h != this.lastSize) {
+				this.AdjustWindow(x,y,w,h)
+				VarSetCapacity(newSize,16)
+				NumPut(this.width,newSize,0,"uint")
+				NumPut(this.height,newSize,4,"uint")
+				DllCall(this.vTable(this.renderTarget,58),"Ptr",this.renderTarget,"ptr",&newsize)
+				this.SetPosition(x,y)
+			} else if ((x<<16)+y != this.lastPos) {
+				this.AdjustWindow(x,y,w,h)
+				this.SetPosition(x,y)
+			}
+		} else {
+			if (!DllCall("GetWindowRect","ptr",this.hwnd,"ptr",this.tBufferPtr)) {
 				if (this.drawing) {
 					DllCall(this.vTable(this.renderTarget,48),"Ptr",this.renderTarget)
 					DllCall(this.vTable(this.renderTarget,47),"Ptr",this.renderTarget,"Ptr",this.clrPtr)
@@ -642,7 +667,7 @@ class ShinsOverlayClass {
 	;  internal functions used by the class
 	;########################################## 
 	AdjustWindow(byref x,byref y,byref w,byref h) {
-		DllCall("GetWindowInfo","ptr",this.attachHWND,"ptr",this.tBufferPtr)
+		DllCall("GetWindowInfo","ptr",(this.attachHWND ? this.attachHWND : this.hwnd),"ptr",this.tBufferPtr)
 		pp := (this.attachClient ? 20 : 4)
 		x1 := NumGet(this.tBufferPtr,pp,"int")
 		y1 := NumGet(this.tBufferPtr,pp+4,"int")
