@@ -7,15 +7,18 @@
 
 class ShinsOverlayClass {
 
-	;x_orTitle		:		x pos of overlay OR title of window to attach to
-	;y				:		y pos of overlay
-	;w				:		width of overlay
-	;h				:		height of overlay
-	;guiID			:		name of the ahk gui id for the overlay window
+	;x_orTitle			:		x pos of overlay OR title of window to attach to
+	;y					:		y pos of overlay
+	;w					:		width of overlay
+	;h					:		height of overlay
+	;alwaysOnTop		:		If enabled, the window will always appear over other windows
+	;clickThrough		:		If enabled, mouse clicks will pass through the window onto the window beneath
+	;taskBarIcon		:		If enabled, the window will have a taskbar icon
+	;guiID				:		name of the ahk gui id for the overlay window
 	;
-	;notes			:		if planning to attach to window these parameters can all be left blank
+	;notes				:		if planning to attach to window these parameters can all be left blank
 	
-	__New(x_orTitle:=0,y:=0,width:=0,height:=0,guiID:="ShinsOverlayClass") {
+	__New(x_orTitle:=0,y:=0,width:=0,height:=0,alwaysOnTop:=1,clickThrough:=1,taskBarIcon:=0,guiID:="ShinsOverlayClass") {
 	
 	
 		;[input variables] you can change these to affect the way the script behaves
@@ -70,10 +73,17 @@ class ShinsOverlayClass {
 		this.gdiplusToken := token
 		this._guid("{06152247-6f50-465a-9245-118bfd3b6007}",clsidFactory)
 		this._guid("{b859ee5a-d838-4b5b-a2e8-1adc7d93db48}",clsidwFactory)
+		if (clickThrough)
+			gui %guiID%: +hwndhwnd -Caption +E0x80000 +E0x20
+		else
+			gui %guiID%: +hwndhwnd -Caption +E0x80000
+		if (alwaysOnTop)
+			gui %guiID%: +AlwaysOnTop
+		if (!taskBarIcon)
+			gui %guiID%: +ToolWindow
 
-		gui %guiID%: +hwndhwnd -Caption +E0x20 +E0x80000 +AlwaysOnTop +ToolWindow
 		this.hwnd := hwnd
-		DllCall("ShowWindow","ptr",this.hwnd,"uint",8)
+		DllCall("ShowWindow","ptr",this.hwnd,"uint",(clickThrough ? 8 : 1))
 
 		this.tBufferPtr := this.SetVarCapacity("ttBuffer",4096)
 		this.rect1Ptr := this.SetVarCapacity("_rect1",64)
@@ -300,27 +310,45 @@ class ShinsOverlayClass {
 	;text				:				The text to be drawn
 	;x					:				X position
 	;y					:				Y position
-	;color				:				Color in 0xAARRGGBB or 0xRRGGBB format (if 0xRRGGBB then alpha is set to FF (255))
-	;size				:				Font size
+	;size				:				Size of font
+	;color				:				Color of font
 	;fontName			:				Font name (must be installed)
-	;dropShadowColor	:				If a valid color a drop shadow will be added to the text
-	;dropX				:				X offset for drop shadow
-	;dropY				:				Y offset for drop shadow
+	;extraOptions		:				Additonal options which may contain any of the following seperated by spaces:
+	;									Width .............	w[number]				: Example > w200			(Default: this.width)
+	;									Height ............	h[number]				: Example > h200			(Default: this.height)
+	;									Alignment ......... a[Left/Right/Center]	: Example > aCenter			(Default: Left)
+	;									DropShadow ........	ds[hex color]			: Example > dsFF000000		(Default: DISABLED)
+	;									DropShadowXOffset . dsx[number]				: Example > dsx2			(Default: 1)
+	;									DropShadowYOffset . dsy[number]				: Example > dsy2			(Default: 1)
 	;
 	;return				;				Void
 	
-	DrawText(text,x,y,color:=0xFFFFFFFF,size:=18,fontName:="Arial",dropShadowColor:=-1,dropx:=2,dropy:=2) {
+	DrawText(text,x,y,size:=18,color:=0xFF000000,fontName:="Arial",extraOptions:="") {
+		if (!RegExMatch(extraOptions,"w([\d\.]+)",w))
+			w1 := this.width
+		if (!RegExMatch(extraOptions,"h([\d\.]+)",h))
+			h1 := this.height
+		
 		if (!p := this.fonts[fontName size]) {
 			p := this.CacheFont(fontName,size)
 		}
-		if (dropShadowColor != -1) {
-			this.DrawText(text,x+dropx,y+dropy,dropShadowColor,size,fontName)
+		
+		DllCall(this.vTable(p,3),"ptr",p,"uint",(InStr(extraOptions,"aRight") ? 1 : InStr(extraOptions,"aCenter") ? 2 : 0))
+		
+		if (RegExMatch(extraOptions,"ds([a-fA-F\d]+)",ds)) {
+			if (!RegExMatch(extraOptions,"dsx([\d\.]+)",dsx))
+				dsx1 := 1
+			if (!RegExMatch(extraOptions,"dsy([\d\.]+)",dsy))
+				dsy1 := 1
+			this.DrawTextShadow(p,text,x+dsx1,y+dsy1,w1,h1,"0x" ds1)
 		}
+		
 		this.SetBrushColor(color)
 		NumPut(x,this.tBufferPtr,0,"float")
 		NumPut(y,this.tBufferPtr,4,"float")
-		NumPut(x+this.width,this.tBufferPtr,8,"float")
-		NumPut(y+this.height,this.tBufferPtr,12,"float")
+		NumPut(x+w1,this.tBufferPtr,8,"float")
+		NumPut(y+h1,this.tBufferPtr,12,"float")
+		
 		DllCall(this.vTable(this.renderTarget,27),"ptr",this.renderTarget,"wstr",text,"uint",strlen(text),"ptr",p,"ptr",this.tBufferPtr,"ptr",this.brush,"uint",0,"uint",0)
 	}
 	
@@ -646,6 +674,14 @@ class ShinsOverlayClass {
 		NumPut(1,this.matrixPtr,o+12,"float")
 		NumPut(0,this.matrixPtr,o+16,"float")
 		NumPut(0,this.matrixPtr,o+20,"float")
+	}
+	DrawTextShadow(p,text,x,y,w,h,color) {
+		this.SetBrushColor(color)
+		NumPut(x,this.tBufferPtr,0,"float")
+		NumPut(y,this.tBufferPtr,4,"float")
+		NumPut(x+w,this.tBufferPtr,8,"float")
+		NumPut(y+h,this.tBufferPtr,12,"float")
+		DllCall(this.vTable(this.renderTarget,27),"ptr",this.renderTarget,"wstr",text,"uint",strlen(text),"ptr",p,"ptr",this.tBufferPtr,"ptr",this.brush,"uint",0,"uint",0)
 	}
 	Err(str*) {
 		s := ""
