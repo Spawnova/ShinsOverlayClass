@@ -64,7 +64,6 @@ if (overlay.BeginDraw()) { ;must always be called to start drawing; BeginDraw() 
 			overlay.DrawLine(mx,ry+1,mx,ry2,0xFF3EF9CE,1)
 			
 			overlay.FillEllipse(mx,my,3,3,0xFFFFFFFF)
-			
 		}
 		
 		
@@ -89,11 +88,11 @@ if (overlay.BeginDraw()) { ;must always be called to start drawing; BeginDraw() 
 		if (stickRot > 360)
 			stickRot := 0
 		
-		overlay.DrawText("Press ESC to close!",10,200,0xFFFFFFFF,24 + (rot*3),"Courier",0xFF000000) ;draw text that grows and shrinks
-		overlay.DrawText("Press ESC to close!",10,200 + (24+(rot*3)),0xFF000000,24 + (rot*3),"Courier",0xFFFFFFFF) ;draw text that grows and shrinks
+		overlay.DrawText("Press ESC to close!",10,200,24 + (rot*3),0xFFFFFFFF,"Courier","dsFF000000") ;draw text that grows and shrinks
+		overlay.DrawText("Press ESC to close!",10,200 + (24+(rot*3)),24 + (rot*3),0xFF000000,"Courier","dsFFFFFFFF") ;draw text that grows and shrinks
 	} else {
 		overlay.FillRectangle(0,0,overlay.width,overlay.height,0xaa000000)
-		overlay.DrawText("Press F1 to attach the overlay to a window to begin!`nYou can do this multiple times!",0,0,0xFFFFFFFF,40,"Courier",0xFF000000)
+		overlay.DrawText("Press F1 to attach the overlay to a window to begin!`nYou can do this multiple times!",0,0,40,0xFFFFFFFF,"Courier","dsFF000000")
 	}
 	overlay.EndDraw() ;must always be called to end the drawing and update the overlay
 }
