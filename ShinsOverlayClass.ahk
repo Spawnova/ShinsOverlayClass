@@ -146,13 +146,14 @@ class ShinsOverlayClass {
 		}
 		this.wFactory := wFactory
 		
-		if (winexist(x_orTitle))
+		if (x_orTitle != 0 and winexist(x_orTitle))
 			this.AttachToWindow(x_orTitle)
 		 else
 			this.SetPosition(x_orTitle,y)
 		
-		this.BeginDraw()
-		this.EndDraw()
+		DllCall(this.vTable(this.renderTarget,48),"Ptr",this.renderTarget)
+		DllCall(this.vTable(this.renderTarget,47),"Ptr",this.renderTarget,"Ptr",this.clrPtr)
+		DllCall(this.vTable(this.renderTarget,49),"Ptr",this.renderTarget,"int64*",tag1,"int64*",tag2)
 	}
 	
 	
@@ -348,7 +349,7 @@ class ShinsOverlayClass {
 	;
 	;return				;				Void
 	
-	DrawText(text,x,y,size:=18,color:=0xFF000000,fontName:="Arial",extraOptions:="") {
+	DrawText(text,x,y,size:=18,color:=0xFFFFFFFF,fontName:="Arial",extraOptions:="") {
 		if (!RegExMatch(extraOptions,"w([\d\.]+)",w))
 			w1 := this.width
 		if (!RegExMatch(extraOptions,"h([\d\.]+)",h))
