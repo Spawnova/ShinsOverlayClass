@@ -38,7 +38,7 @@ main:
 if (overlay.BeginDraw()) {  ;must always call BeginDraw() to start, it returns true if window is valid
 	
 	overlay.FillRectangle(overlay.realX,overlay.realY,300,100,0xAA000000)
-	overlay.DrawText("Press ESC to exit`nPress F2 to toggle overlay",10,10,0xFFFFFFFF,24)
+	overlay.DrawText("Press ESC to exit`nPress F2 to toggle overlay",10,10,24,0xFFFFFFFF)
 	
 	if (overlay.GetMousePos(mx,my)) { ;if mouse is within overlay area
 		if (lastX != mx or lastY != my) { ;only draw when moving the mouse
