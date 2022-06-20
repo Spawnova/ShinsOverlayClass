@@ -20,7 +20,7 @@ EndDraw()
 DrawImage(image,dstX,dstY,dstW:=0,dstH:=0,srcX:=0,srcY:=0,srcW:=0,srcH:=0,drawCentered:=0,rotation:=0)
 
 #DrawText.................Draws text, supports a dropshadow if a valid color is supplied
-DrawText(text,x,y,color:=0xFFFFFFFF,size:=18,fontName:="Arial",dropShadowColor:=-1,dropx:=2,dropy:=2)
+DrawText(text,x,y,size:=18,color:=0xFF000000,fontName:="Arial",extraOptions:="") #see the comments above the function in the class file for more info
 
 #DrawEllipse..............Draws an ellipse
 DrawEllipse(x, y, w, h, color, thickness:=1)
@@ -28,14 +28,26 @@ DrawEllipse(x, y, w, h, color, thickness:=1)
 #FillEllipse..............Fills an ellipse
 FillEllipse(x, y, w, h, color)
 
+#DrawCircle...............Draw a circle
+DrawCircle(x, y, radius, color, thickness:=1)
+
+#FillCircle...............Fill a circle
+FillCircle(x, y, radius, color)
+
 #DrawRectangle............Draws a rectangle
 DrawRectangle(x, y, w, h, color, thickness:=1)
 
 #FillRectangle............Fills a rectangle
 FillRectangle(x, y, w, h, color)
 
+#DrawRoundedRectangle.....Draw a rectangle with rounded corners
+DrawRoundedRectangle(x, y, w, h, radiusX, radiusY, color, thickness:=1)
+
+#FillRoundedRectangle.....Fill a rectangle with rounded corners
+FillRoundedRectangle(x, y, w, h, radiusX, radiusY, color)
+
 #DrawLine.................Draws a line from 2 positions
-DrawLine(x1,y1,x2,y2,color,thickness:=1)
+DrawLine(x1,y1,x2,y2,color,thickness:=1,rounded:=0)
 
 #SetPosition..............Sets the overlay position, only when not attached
 SetPosition(x,y,w:=0,h:=0)
