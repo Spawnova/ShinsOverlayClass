@@ -1,7 +1,7 @@
 # ShinsOverlayClass
-A direct2d overlay for AutoHotkey, made to be user friendly and fast
+A direct2d overlay for AutoHotkey, made to be user friendly and fast.
 
-# Youtube simple overview and examples
+# YouTube simple overview and examples
 
 [![Video](https://img.youtube.com/vi/L2Cb1UCJDEg/default.jpg)](https://www.youtube.com/watch?v=L2Cb1UCJDEg)
 
@@ -50,6 +50,5 @@ GetMousePos(byref x, byref y, realRegionOnly:=0)
 ## Notes
 
 * Only for AHK V1.1, V2 is not supported.
-* 
 * I've only tested on my end and can confirm it works for me using 32/64 bit AHK_L (AHK V1.1) on Windows 10.
 * If it doesn't work for you let me know, I may be able to help, or maybe not, just depends.
