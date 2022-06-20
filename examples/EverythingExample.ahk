@@ -3,8 +3,8 @@
 
 x := floor(a_screenwidth * 0.2)
 y := floor(a_screenheight * 0.2)
-width := floor(1920 * 0.6)
-height := floor(1080 * 0.6)
+width := floor(a_screenwidth * 0.6)
+height := floor(a_screenheight * 0.6)
 
 overlay := new ShinsOverlayClass(x,y,width,height,0,0,1)
 opacity := 0xBB
