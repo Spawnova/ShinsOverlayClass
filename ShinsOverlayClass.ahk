@@ -1,4 +1,5 @@
 ;Direct2d overlay class by Spawnova (5/27/2022)
+;https://github.com/Spawnova/ShinsOverlayClass
 ;
 ;I'm not a professional programmer, I do this for fun, if it doesn't work for you I can try and help
 ;but I can't promise I will be able to solve the issue
