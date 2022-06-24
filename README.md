@@ -50,6 +50,15 @@ FillRoundedRectangle(x, y, w, h, radiusX, radiusY, color)
 #DrawLine.................Draws a line from 2 positions
 DrawLine(x1,y1,x2,y2,color,thickness:=1,rounded:=0)
 
+#DrawLines................Draws an array of lines, points must be in an array [[x,y],[x,y]] etc.
+DrawLines(points,color,connect:=0,thickness:=1,rounded:=0)
+
+#DrawPolygon..............Draws a polygon outline, points must be in an array [[x,y],[x,y]] etc.
+DrawPolygon(points,color,thickness:=1,rounded:=0)
+
+#FillPolygon..............Fill a polygon, points must be in an array [[x,y],[x,y]] etc.
+FillPolygon(points,color)
+
 #SetPosition..............Sets the overlay position, only when not attached
 SetPosition(x,y,w:=0,h:=0)
 
