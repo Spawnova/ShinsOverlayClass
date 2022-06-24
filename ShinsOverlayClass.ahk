@@ -590,32 +590,36 @@ class ShinsOverlayClass {
 	;
 	;lines				:				An array of 2d points, example: [[0,0],[5,0],[0,5]]
 	;color				:				Color in 0xAARRGGBB or 0xRRGGBB format (if 0xRRGGBB then alpha is set to FF (255))
+	;connect			:				If 1 then connect the start and end together
 	;thickness			:				Thickness of the line
 	;
 	;return				;				1 on success; 0 otherwise
 
-	DrawLines(lines,color,thickness:=1,rounded:=0) {
-		if (lines.length() < 2)
+	DrawLines(points,color,connect:=0,thickness:=1,rounded:=0) {
+		if (points.length() < 2)
 			return 0
-		lx := sx := lines[1][1]
-		ly := sy := lines[1][2]
+		lx := sx := points[1][1]
+		ly := sy := points[1][2]
 		this.SetBrushColor(color)
 		if (this.bits) {
-			loop % lines.length()-1 {
-				NumPut(lx,this.tBufferPtr,0,"float"), NumPut(ly,this.tBufferPtr,4,"float"), NumPut(lx:=lines[a_index+1][1],this.tBufferPtr,8,"float"), NumPut(ly:=lines[a_index+1][2],this.tBufferPtr,12,"float")
+			loop % points.length()-1 {
+				NumPut(lx,this.tBufferPtr,0,"float"), NumPut(ly,this.tBufferPtr,4,"float"), NumPut(lx:=points[a_index+1][1],this.tBufferPtr,8,"float"), NumPut(ly:=points[a_index+1][2],this.tBufferPtr,12,"float")
 				DllCall(this.vTable(this.renderTarget,15),"Ptr",this.renderTarget,"Double",NumGet(this.tBufferPtr,0,"double"),"Double",NumGet(this.tBufferPtr,8,"double"),"ptr",this.brush,"float",thickness,"ptr",(rounded?this.strokeRounded:this.stroke))
 			}
-			NumPut(sx,this.tBufferPtr,0,"float"), NumPut(sy,this.tBufferPtr,4,"float"), NumPut(lx,this.tBufferPtr,8,"float"), NumPut(ly,this.tBufferPtr,12,"float")
-			DllCall(this.vTable(this.renderTarget,15),"Ptr",this.renderTarget,"Double",NumGet(this.tBufferPtr,0,"double"),"Double",NumGet(this.tBufferPtr,8,"double"),"ptr",this.brush,"float",thickness,"ptr",(rounded?this.strokeRounded:this.stroke))
+			if (connect) {
+				NumPut(sx,this.tBufferPtr,0,"float"), NumPut(sy,this.tBufferPtr,4,"float"), NumPut(lx,this.tBufferPtr,8,"float"), NumPut(ly,this.tBufferPtr,12,"float")
+				DllCall(this.vTable(this.renderTarget,15),"Ptr",this.renderTarget,"Double",NumGet(this.tBufferPtr,0,"double"),"Double",NumGet(this.tBufferPtr,8,"double"),"ptr",this.brush,"float",thickness,"ptr",(rounded?this.strokeRounded:this.stroke))
+			}
 		} else {
-			loop % lines.length()-1 {
+			loop % points.length()-1 {
 				x1 := lx
 				y1 := ly
-				x2 := lx := lines[a_index+1][1]
-				y2 := ly := lines[a_index+1][2]
+				x2 := lx := points[a_index+1][1]
+				y2 := ly := points[a_index+1][2]
 				DllCall(this.vTable(this.renderTarget,15),"Ptr",this.renderTarget,"float",x1,"float",y1,"float",x2,"float",y2,"ptr",this.brush,"float",thickness,"ptr",(rounded?this.strokeRounded:this.stroke))
 			}
-			DllCall(this.vTable(this.renderTarget,15),"Ptr",this.renderTarget,"float",sx,"float",sy,"float",lx,"float",ly,"ptr",this.brush,"float",thickness,"ptr",(rounded?this.strokeRounded:this.stroke))
+			if (connect)
+				DllCall(this.vTable(this.renderTarget,15),"Ptr",this.renderTarget,"float",sx,"float",sy,"float",lx,"float",ly,"ptr",this.brush,"float",thickness,"ptr",(rounded?this.strokeRounded:this.stroke))
 		}
 		return 1
 	}
