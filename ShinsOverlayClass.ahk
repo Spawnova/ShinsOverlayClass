@@ -1,5 +1,4 @@
 ;Direct2d overlay class by Spawnova (5/27/2022)
-;https://github.com/Spawnova/ShinsOverlayClass
 ;
 ;I'm not a professional programmer, I do this for fun, if it doesn't work for you I can try and help
 ;but I can't promise I will be able to solve the issue
@@ -9,7 +8,7 @@
 class ShinsOverlayClass {
 
 	;x_orTitle			:		x pos of overlay OR title of window to attach to
-	;y					:		y pos of overlay
+	;y_orClientAttach	:		y pos of overlay OR attach to client instead of window (default client)
 	;w					:		width of overlay
 	;h					:		height of overlay
 	;alwaysOnTop		:		If enabled, the window will always appear over other windows
@@ -19,7 +18,7 @@ class ShinsOverlayClass {
 	;
 	;notes				:		if planning to attach to window these parameters can all be left blank
 	
-	__New(x_orTitle:=0,y:=0,width:=0,height:=0,alwaysOnTop:=1,clickThrough:=1,taskBarIcon:=0,guiID:="ShinsOverlayClass") {
+	__New(x_orTitle:=0,y_orClientAttach:=0,width:=0,height:=0,alwaysOnTop:=1,clickThrough:=1,taskBarIcon:=0,guiID:="ShinsOverlayClass") {
 	
 	
 		;[input variables] you can change these to affect the way the script behaves
@@ -31,11 +30,11 @@ class ShinsOverlayClass {
 		;[output variables] you can read these to get extra info, DO NOT MODIFY THESE
 		
 		this.x := x_orTitle			;overlay x position relative to screen
-		this.y := y					;overlay y position relative to screen
+		this.y := y_orClientAttach	;overlay y position relative to screen
 		this.width := width			;overlay width
 		this.height := height		;overlay height
 		this.x2 := x_orTitle+width
-		this.y2 := y+height
+		this.y2 := y_orClientAttach+height
 		this.attachHWND := 0			;HWND of the attached window, 0 if not attached
 		this.attachClient := 0		;1 if using client space, 0 otherwise
 		this.attachForeground := 0	;1 if overlay is only drawn when the attached window is the active window; 0 otherwise
@@ -63,7 +62,7 @@ class ShinsOverlayClass {
 		this.fonts := []
 		this.lastPos := 0
 		this.offX := -x_orTitle
-		this.offY := -y
+		this.offY := -y_orClientAttach
 		this.lastCol := 0
 		this.drawing := 0
 		
@@ -148,9 +147,9 @@ class ShinsOverlayClass {
 		this.wFactory := wFactory
 		
 		if (x_orTitle != 0 and winexist(x_orTitle))
-			this.AttachToWindow(x_orTitle)
+			this.AttachToWindow(x_orTitle,!y_orClientAttach)
 		 else
-			this.SetPosition(x_orTitle,y)
+			this.SetPosition(x_orTitle,y_orClientAttach)
 		
 		DllCall(this.vTable(this.renderTarget,48),"Ptr",this.renderTarget)
 		DllCall(this.vTable(this.renderTarget,47),"Ptr",this.renderTarget,"Ptr",this.clrPtr)
@@ -583,6 +582,134 @@ class ShinsOverlayClass {
 		}
 		
 	}
+	
+	
+	;####################################################################################################################################################################################################################################
+	;DrawLines
+	;
+	;lines				:				An array of 2d points, example: [[0,0],[5,0],[0,5]]
+	;color				:				Color in 0xAARRGGBB or 0xRRGGBB format (if 0xRRGGBB then alpha is set to FF (255))
+	;thickness			:				Thickness of the line
+	;
+	;return				;				1 on success; 0 otherwise
+
+	DrawLines(lines,color,thickness:=1,rounded:=0) {
+		if (lines.length() < 2)
+			return 0
+		lx := sx := lines[1][1]
+		ly := sy := lines[1][2]
+		this.SetBrushColor(color)
+		if (this.bits) {
+			loop % lines.length()-1 {
+				NumPut(lx,this.tBufferPtr,0,"float"), NumPut(ly,this.tBufferPtr,4,"float"), NumPut(lx:=lines[a_index+1][1],this.tBufferPtr,8,"float"), NumPut(ly:=lines[a_index+1][2],this.tBufferPtr,12,"float")
+				DllCall(this.vTable(this.renderTarget,15),"Ptr",this.renderTarget,"Double",NumGet(this.tBufferPtr,0,"double"),"Double",NumGet(this.tBufferPtr,8,"double"),"ptr",this.brush,"float",thickness,"ptr",(rounded?this.strokeRounded:this.stroke))
+			}
+			NumPut(sx,this.tBufferPtr,0,"float"), NumPut(sy,this.tBufferPtr,4,"float"), NumPut(lx,this.tBufferPtr,8,"float"), NumPut(ly,this.tBufferPtr,12,"float")
+			DllCall(this.vTable(this.renderTarget,15),"Ptr",this.renderTarget,"Double",NumGet(this.tBufferPtr,0,"double"),"Double",NumGet(this.tBufferPtr,8,"double"),"ptr",this.brush,"float",thickness,"ptr",(rounded?this.strokeRounded:this.stroke))
+		} else {
+			loop % lines.length()-1 {
+				x1 := lx
+				y1 := ly
+				x2 := lx := lines[a_index+1][1]
+				y2 := ly := lines[a_index+1][2]
+				DllCall(this.vTable(this.renderTarget,15),"Ptr",this.renderTarget,"float",x1,"float",y1,"float",x2,"float",y2,"ptr",this.brush,"float",thickness,"ptr",(rounded?this.strokeRounded:this.stroke))
+			}
+			DllCall(this.vTable(this.renderTarget,15),"Ptr",this.renderTarget,"float",sx,"float",sy,"float",lx,"float",ly,"ptr",this.brush,"float",thickness,"ptr",(rounded?this.strokeRounded:this.stroke))
+		}
+		return 1
+	}
+	
+	
+	;####################################################################################################################################################################################################################################
+	;DrawPolygon
+	;
+	;points				:				An array of 2d points, example: [[0,0],[5,0],[0,5]]
+	;color				:				Color in 0xAARRGGBB or 0xRRGGBB format (if 0xRRGGBB then alpha is set to FF (255))
+	;thickness			:				Thickness of the line
+	;
+	;return				;				1 on success; 0 otherwise
+
+	DrawPolygon(points,color,thickness:=1,rounded:=0) {
+		if (points.length() < 3)
+			return 0
+		
+		if (DllCall(this.vTable(this.factory,10),"Ptr",this.factory,"Ptr*",pGeom) = 0) {
+			if (DllCall(this.vTable(pGeom,17),"Ptr",pGeom,"ptr*",sink) = 0) {
+				this.SetBrushColor(color)
+				if (this.bits) {
+					numput(points[1][1],this.tBufferPtr,0,"float")
+					numput(points[1][2],this.tBufferPtr,4,"float")
+					DllCall(this.vTable(sink,5),"ptr",sink,"double",numget(this.tBufferPtr,0,"double"),"uint",1)
+					loop % points.length()-1
+					{
+						numput(points[a_index+1][1],this.tBufferPtr,0,"float")
+						numput(points[a_index+1][2],this.tBufferPtr,4,"float")
+						DllCall(this.vTable(sink,10),"ptr",sink,"double",numget(this.tBufferPtr,0,"double"))
+					}
+					DllCall(this.vTable(sink,8),"ptr",sink,"uint",1)
+					DllCall(this.vTable(sink,9),"ptr",sink)
+				} else {
+					DllCall(this.vTable(sink,5),"ptr",sink,"float",points[1][1],"float",points[1][2],"uint",1)
+					loop % points.length()-1
+						DllCall(this.vTable(sink,10),"ptr",sink,"float",points[a_index+1][1],"float",points[a_index+1][2])
+					DllCall(this.vTable(sink,8),"ptr",sink,"uint",1)
+					DllCall(this.vTable(sink,9),"ptr",sink)
+				}
+				
+				if (DllCall(this.vTable(this.renderTarget,22),"Ptr",this.renderTarget,"Ptr",pGeom,"ptr",this.brush,"float",thickness,"ptr",(rounded?this.strokeRounded:this.stroke)) = 0)
+					return 1
+			}
+		}
+		
+		
+		return 0
+	}
+	
+	
+	;####################################################################################################################################################################################################################################
+	;FillPolygon
+	;
+	;points				:				An array of 2d points, example: [[0,0],[5,0],[0,5]]
+	;color				:				Color in 0xAARRGGBB or 0xRRGGBB format (if 0xRRGGBB then alpha is set to FF (255))
+	;
+	;return				;				1 on success; 0 otherwise
+
+	FillPolygon(points,color) {
+		if (points.length() < 3)
+			return 0
+		
+		if (DllCall(this.vTable(this.factory,10),"Ptr",this.factory,"Ptr*",pGeom) = 0) {
+			if (DllCall(this.vTable(pGeom,17),"Ptr",pGeom,"ptr*",sink) = 0) {
+				this.SetBrushColor(color)
+				if (this.bits) {
+					numput(points[1][1],this.tBufferPtr,0,"float")
+					numput(points[1][2],this.tBufferPtr,4,"float")
+					DllCall(this.vTable(sink,5),"ptr",sink,"double",numget(this.tBufferPtr,0,"double"),"uint",0)
+					loop % points.length()-1
+					{
+						numput(points[a_index+1][1],this.tBufferPtr,0,"float")
+						numput(points[a_index+1][2],this.tBufferPtr,4,"float")
+						DllCall(this.vTable(sink,10),"ptr",sink,"double",numget(this.tBufferPtr,0,"double"))
+					}
+					DllCall(this.vTable(sink,8),"ptr",sink,"uint",1)
+					DllCall(this.vTable(sink,9),"ptr",sink)
+				} else {
+					DllCall(this.vTable(sink,5),"ptr",sink,"float",points[1][1],"float",points[1][2],"uint",0)
+					loop % points.length()-1
+						DllCall(this.vTable(sink,10),"ptr",sink,"float",points[a_index+1][1],"float",points[a_index+1][2])
+					DllCall(this.vTable(sink,8),"ptr",sink,"uint",1)
+					DllCall(this.vTable(sink,9),"ptr",sink)
+				}
+				
+				if (DllCall(this.vTable(this.renderTarget,23),"Ptr",this.renderTarget,"Ptr",pGeom,"ptr",this.brush,"ptr",0) = 0)
+					return 1
+			}
+		}
+		
+		
+		return 0
+	}
+	
 	
 	;####################################################################################################################################################################################################################################
 	;SetPosition
