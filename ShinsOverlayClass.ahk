@@ -8,18 +8,18 @@
 
 class ShinsOverlayClass {
 
-	;x_orTitle			:		x pos of overlay OR title of window to attach to
-	;y_orClientAttach	:		y pos of overlay OR attach to client instead of window (default client)
-	;w					:		width of overlay
-	;h					:		height of overlay
-	;alwaysOnTop		:		If enabled, the window will always appear over other windows
-	;clickThrough		:		If enabled, mouse clicks will pass through the window onto the window beneath
-	;taskBarIcon		:		If enabled, the window will have a taskbar icon
-	;guiID				:		name of the ahk gui id for the overlay window
+	;x_orTitle					:		x pos of overlay OR title of window to attach to
+	;y_orClient					:		y pos of overlay OR attach to client instead of window (default window)
+	;width_orForeground			:		width of overlay OR overlay is only drawn when the attached window is in the foreground (default 1)
+	;height						:		height of overlay
+	;alwaysOnTop				:		If enabled, the window will always appear over other windows
+	;clickThrough				:		If enabled, mouse clicks will pass through the window onto the window beneath
+	;taskBarIcon				:		If enabled, the window will have a taskbar icon
+	;guiID						:		name of the ahk gui id for the overlay window
 	;
-	;notes				:		if planning to attach to window these parameters can all be left blank
+	;notes						:		if planning to attach to window these parameters can all be left blank
 	
-	__New(x_orTitle:=0,y_orClientAttach:=0,width:=0,height:=0,alwaysOnTop:=1,clickThrough:=1,taskBarIcon:=0,guiID:="ShinsOverlayClass") {
+	__New(x_orTitle:=0,y_orClient:=0,width_orForeground:=1,height:=0,alwaysOnTop:=1,clickThrough:=1,taskBarIcon:=0,guiID:="ShinsOverlayClass") {
 	
 	
 		;[input variables] you can change these to affect the way the script behaves
@@ -30,15 +30,15 @@ class ShinsOverlayClass {
 	
 		;[output variables] you can read these to get extra info, DO NOT MODIFY THESE
 		
-		this.x := x_orTitle			;overlay x position relative to screen
-		this.y := y_orClientAttach	;overlay y position relative to screen
-		this.width := width			;overlay width
-		this.height := height		;overlay height
-		this.x2 := x_orTitle+width
-		this.y2 := y_orClientAttach+height
-		this.attachHWND := 0			;HWND of the attached window, 0 if not attached
-		this.attachClient := 0		;1 if using client space, 0 otherwise
-		this.attachForeground := 0	;1 if overlay is only drawn when the attached window is the active window; 0 otherwise
+		this.x := x_orTitle					;overlay x position OR title of window to attach to
+		this.y := y_orClient				;overlay y position OR attach to client area
+		this.width := width_orForeground	;overlay width OR attached overlay only drawn when window is in foreground
+		this.height := height				;overlay height
+		this.x2 := x_orTitle+width_orForeground
+		this.y2 := y_orClient+height
+		this.attachHWND := 0				;HWND of the attached window, 0 if not attached
+		this.attachClient := 0				;1 if using client space, 0 otherwise
+		this.attachForeground := 0			;1 if overlay is only drawn when the attached window is the active window; 0 otherwise
 		
 		;Generally with windows there are invisible borders that allow
 		;the window to be resized, but it makes the window larger
@@ -63,7 +63,7 @@ class ShinsOverlayClass {
 		this.fonts := []
 		this.lastPos := 0
 		this.offX := -x_orTitle
-		this.offY := -y_orClientAttach
+		this.offY := -y_orClient
 		this.lastCol := 0
 		this.drawing := 0
 		
@@ -125,7 +125,7 @@ class ShinsOverlayClass {
 		NumPut(96,this.rtPtr,12,"float")
 		NumPut(96,this.rtPtr,16,"float")
 		NumPut(hwnd,this.hrtPtr,0,"Ptr")
-		NumPut(width,this.hrtPtr,a_ptrsize,"uint")
+		NumPut(width_orForeground,this.hrtPtr,a_ptrsize,"uint")
 		NumPut(height,this.hrtPtr,a_ptrsize+4,"uint")
 		NumPut(2,this.hrtPtr,a_ptrsize+8,"uint")
 		if (DllCall(this.vTable(this.factory,14),"Ptr",this.factory,"Ptr",this.rtPtr,"ptr",this.hrtPtr,"Ptr*",renderTarget) != 0) {
@@ -148,9 +148,9 @@ class ShinsOverlayClass {
 		this.wFactory := wFactory
 		
 		if (x_orTitle != 0 and winexist(x_orTitle))
-			this.AttachToWindow(x_orTitle,y_orClientAttach)
+			this.AttachToWindow(x_orTitle,y_orClient,width_orForeground)
 		 else
-			this.SetPosition(x_orTitle,y_orClientAttach)
+			this.SetPosition(x_orTitle,y_orClient)
 		
 		DllCall(this.vTable(this.renderTarget,48),"Ptr",this.renderTarget)
 		DllCall(this.vTable(this.renderTarget,47),"Ptr",this.renderTarget,"Ptr",this.clrPtr)
@@ -180,21 +180,15 @@ class ShinsOverlayClass {
 			this.Err("AttachToWindow: Error","Could not find window - " title)
 			return 0
 		}
-		if (AttachToClientArea) {
-			if (!DllCall("GetWindowRect","ptr",this.attachHWND,"ptr",this.tBufferPtr)) {
-				this.Err("AttachToWindow: Error","Problem getting client rect, is window minimized?")
-				return 0
-			}
-			this.AdjustClient(x,y,w,h)
-		} else {
-			if (!DllCall("GetWindowRect","ptr",this.attachHWND,"ptr",this.tBufferPtr)) {
-				this.Err("AttachToWindow: Error","Problem getting window rect, is window minimized?")
-				return 0
-			}
-			this.AdjustWindow(x,y,w,h)
+		if (!DllCall("GetWindowRect","ptr",this.attachHWND,"ptr",this.tBufferPtr)) {
+			this.Err("AttachToWindow: Error","Problem getting window rect, is window minimized?")
+			return 0
 		}
+		
 		this.attachClient := AttachToClientArea
 		this.attachForeground := foreground
+		this.AdjustWindow(x,y,w,h)
+		
 		VarSetCapacity(newSize,16)
 		NumPut(this.width,newSize,0,"uint")
 		NumPut(this.height,newSize,4,"uint")
@@ -570,7 +564,7 @@ class ShinsOverlayClass {
 	;
 	;return				;				Void
 
-	DrawLine(x1,y1,x2,y2,color,thickness:=1,rounded:=0) {
+	DrawLine(x1,y1,x2,y2,color:=0xFFFFFFFF,thickness:=1,rounded:=0) {
 		this.SetBrushColor(color)
 		if (this.bits) {
 			NumPut(x1,this.tBufferPtr,0,"float")  ;Special thanks to teadrinker for helping me
