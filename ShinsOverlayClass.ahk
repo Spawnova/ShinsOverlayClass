@@ -287,12 +287,13 @@ class ShinsOverlayClass {
 	;srcY				:				Y position to draw from
 	;srcW				:				Width of image to draw from
 	;srcH				:				Height of image to draw from
+	;alpha				:				Image transparency, float between 0 and 1
 	;drawCentered		:				Draw the image centered on dstX/dstY, otherwise dstX/dstY will be the top left of the image
 	;rotation			:				Image rotation in degrees (0-360)
 	;
 	;return				;				Void
 	
-	DrawImage(image,dstX,dstY,dstW:=0,dstH:=0,srcX:=0,srcY:=0,srcW:=0,srcH:=0,drawCentered:=0,rotation:=0) {
+	DrawImage(image,dstX,dstY,dstW:=0,dstH:=0,srcX:=0,srcY:=0,srcW:=0,srcH:=0,alpha:=1,drawCentered:=0,rotation:=0) {
 		if (!i := this.imageCache[image]) {
 			i := this.cacheImage(image)
 		}
@@ -316,11 +317,11 @@ class ShinsOverlayClass {
 				DllCall("d2d1\D2D1MakeRotateMatrix","float",rotation,"float",dstX+(dstW/2),"float",dstY+(dstH/2),"ptr",this.matrixPtr)
 			}
 			DllCall(this.vTable(this.renderTarget,30),"ptr",this.renderTarget,"ptr",this.matrixPtr)
-			DllCall(this.vTable(this.renderTarget,26),"ptr",this.renderTarget,"ptr",i.p,"ptr",this.rect1Ptr,"float",1,"uint",this.interpolationMode,"ptr",this.rect2Ptr)
+			DllCall(this.vTable(this.renderTarget,26),"ptr",this.renderTarget,"ptr",i.p,"ptr",this.rect1Ptr,"float",alpha,"uint",this.interpolationMode,"ptr",this.rect2Ptr)
 			this.SetIdentity()
 			DllCall(this.vTable(this.renderTarget,30),"ptr",this.renderTarget,"ptr",this.matrixPtr)
 		} else {
-			DllCall(this.vTable(this.renderTarget,26),"ptr",this.renderTarget,"ptr",i.p,"ptr",this.rect1Ptr,"float",1,"uint",this.interpolationMode,"ptr",this.rect2Ptr)
+			DllCall(this.vTable(this.renderTarget,26),"ptr",this.renderTarget,"ptr",i.p,"ptr",this.rect1Ptr,"float",alpha,"uint",this.interpolationMode,"ptr",this.rect2Ptr)
 		}
 	}
 	
@@ -898,9 +899,9 @@ class ShinsOverlayClass {
 			pp := (a_index-1)*4
 			col := NumGet(scan+0,pp,"uint")
 			a := (col&0xFF000000)>>24
-			NumPut((col&0xFF0000)>>16*a/255,p+0,pp+0,"uchar")
-			NumPut((col&0xFF00)>>8*a/255,p+0,pp+1,"uchar")
-			NumPut((col&0xFF)*a/255,p+0,pp+2,"uchar")
+			NumPut(((col&0xFF0000)>>16)*a/255,p+0,pp+0,"uchar")
+			NumPut(((col&0xFF00)>>8)*a/255,p+0,pp+1,"uchar")
+			NumPut(((col&0xFF)*a)/255,p+0,pp+2,"uchar")
 			NumPut(a,p+0,pp+3,"uchar")
 		}	
 		DllCall("Gdiplus\GdipBitmapUnlockBits", "Ptr", bm, "Ptr", &bmdata)
