@@ -18,7 +18,7 @@ BeginDraw()
 EndDraw()
 
 #DrawImage................Draw an image
-DrawImage(image,dstX,dstY,dstW:=0,dstH:=0,srcX:=0,srcY:=0,srcW:=0,srcH:=0,drawCentered:=0,rotation:=0)
+DrawImage(image,dstX,dstY,dstW:=0,dstH:=0,srcX:=0,srcY:=0,srcW:=0,srcH:=0,alpha:=1,drawCentered:=0,rotation:=0)
 
 #DrawText.................Draws text, supports a dropshadow if a valid color is supplied
 DrawText(text,x,y,size:=18,color:=0xFF000000,fontName:="Arial",extraOptions:="") #see the comments above the function in the class file for more info
