@@ -19,7 +19,7 @@ stepsText.push("Drawing circles and ellipses!`nDrawEllipse(x, y, w, h, color, th
 stepsText.push("Drawing circles and ellipses!`nMaybe a moving ball?")
 stepsText.push("Drawing rectangles!`nDrawRectangle(x, y, w, h, color, thickness:=1)`nFillRectangle(x, y, w, h, color)`nDrawRoundedRectangle(x, y, w, h, radiusX, radiusY, color, thickness:=1)`nFillRoundedRectangle(x, y, w, h, radiusX, radiusY, color)")
 stepsText.push("Drawing rectangles!`nA bouncy block!")
-stepsText.push("Drawing images!`nDrawImage(image,dstX,dstY,dstW:=0,dstH:=0,srcX:=0,srcY:=0,srcW:=0,srcH:=0,drawCentered:=0,rotation:=0)")
+stepsText.push("Drawing images!`nDrawImage(image,dstX,dstY,dstW:=0,dstH:=0,srcX:=0,srcY:=0,srcW:=0,srcH:=0,alpha:=1,drawCentered:=0,rotation:=0)")
 stepsText.push("Drawing text!`nDrawText(text,x,y,size:=18,color:=0xFF000000,fontName:=""Arial"",extraOptions:="""")")
 stepsText.push("That's all folks!")
 
@@ -211,7 +211,7 @@ if (overlay.BeginDraw()) {
 		
 		overlay.DrawText("Now rotating",width*0.5,height*0.60,18,0xFFFFFFFF)
 		overlay.FillRectangle(width*0.5,height*0.65,128,128,0x99FFFFFF)
-		overlay.DrawImage("stickman.png",width*0.5,height*0.65,128,128,stickFrame*32,0,32,stickH,0,stickRot)
+		overlay.DrawImage("stickman.png",width*0.5,height*0.65,128,128,stickFrame*32,0,32,stickH,1,0,stickRot)
 		
 	} else if (step = 9) {
 	
