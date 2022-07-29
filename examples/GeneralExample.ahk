@@ -77,7 +77,7 @@ if (overlay.BeginDraw()) { ;must always be called to start drawing; BeginDraw() 
 		
 		
 		;drawing stickman, scaling from 32x32 to 128x128 and animating from spritesheet
-		overlay.DrawImage("stickMan.png",100,100,128,128,stickFrame*32,0,32,32,0,stickRot) ;draw a rotating stickman who animates
+		overlay.DrawImage("stickMan.png",100,100,128,128,stickFrame*32,0,32,32,1,0,stickRot) ;draw a rotating stickman who animates
 		if (a_tickcount > nextStickFrame) {
 			stickFrame++
 			if (stickFrame > 3)
