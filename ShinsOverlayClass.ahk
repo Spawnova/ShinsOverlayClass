@@ -66,6 +66,7 @@ class ShinsOverlayClass {
 		this.offY := -y_orClient
 		this.lastCol := 0
 		this.drawing := 0
+		this.guiID := guiID
 		
 		this.LoadLib("d2d1","dwrite","dwmapi","gdiplus")
 		VarSetCapacity(gsi, 24, 0)
@@ -779,9 +780,17 @@ class ShinsOverlayClass {
 		
 	}
 	
-
 	
+	;####################################################################################################################################################################################################################################
+	;Clear
+	;
+	;notes						:			Clears the overlay, essentially the same as running BegindDraw followed by EndDraw
 	
+	Clear() {
+		DllCall(this.vTable(this.renderTarget,48),"Ptr",this.renderTarget)
+		DllCall(this.vTable(this.renderTarget,47),"Ptr",this.renderTarget,"Ptr",this.clrPtr)
+		DllCall(this.vTable(this.renderTarget,49),"Ptr",this.renderTarget,"int64*",tag1,"int64*",tag2)
+	}
 	
 	
 	
@@ -931,8 +940,10 @@ class ShinsOverlayClass {
 		}
 		return this.fonts[name size] := textFormat
 	}
-	_Delete() {
+	__Delete() {
 		DllCall("gdiplus\GdiplusShutdown", "Ptr*", this.gdiplusToken)
+		guiID := this.guiID
+		gui %guiID%:destroy
 	}
 	Mcode(str) {
 		s := strsplit(str,"|")
