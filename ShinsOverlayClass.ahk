@@ -68,6 +68,7 @@ class ShinsOverlayClass {
 		this.drawing := 0
 		this.guiID := guiID
 		
+		this._cacheImage := this.mcode("VlOD7AiLRCQgD69EJBzB4AKFwA+OmgAAANl8JAaLVCQYi0wkFI00EA+3RCQGgMwMZolEJASNdgAPtloDMcCA+/8Pk8CDwgSDwQSJBCQPtkL92wQkiQQk2wQkD7ZC/NjJiQQk2wQkD7ZC/tjKiQQk2wQk3svZytlsJATfHCTZbCQGD7cEJIhB/NlsJATfHCTZbCQGD7cEJIhB/dlsJATfHCTZbCQGiFn/D7cEJIhB/jnWdYWDxAi4AQAAAFtew5CQ|RQ+vwUHB4AJFhcB+f0GD6AFBwegCTo1MggRmDx9EAABED7ZCAzHAZg/v22YP78lmD+/AZg/v0kGA+P8Pk8BIg8IESIPBBPMPKtgPtkL98w8qyA+2QvzzDyrAD7ZC/kSIQf/zDyrQ8w9Zy/MPWcPzD1nT8w8swohB/PMPLMGIQf3zDyzAiEH+STnRdZS4AQAAAMOQkJCQkJCQkJCQkJCQkA==")
 		this.LoadLib("d2d1","dwrite","dwmapi","gdiplus")
 		VarSetCapacity(gsi, 24, 0)
 		NumPut(1,gsi,0,"uint")
@@ -675,7 +676,7 @@ class ShinsOverlayClass {
 	;
 	;return				;				1 on success; 0 otherwise
 
-	FillPolygon(points,color) {
+	FillPolygon(points,color,xoffset:=0,yoffset:=0) {
 		if (points.length() < 3)
 			return 0
 		
@@ -683,21 +684,21 @@ class ShinsOverlayClass {
 			if (DllCall(this.vTable(pGeom,17),"Ptr",pGeom,"ptr*",sink) = 0) {
 				this.SetBrushColor(color)
 				if (this.bits) {
-					numput(points[1][1],this.tBufferPtr,0,"float")
-					numput(points[1][2],this.tBufferPtr,4,"float")
+					numput(points[1][1]+xoffset,this.tBufferPtr,0,"float")
+					numput(points[1][2]+yoffset,this.tBufferPtr,4,"float")
 					DllCall(this.vTable(sink,5),"ptr",sink,"double",numget(this.tBufferPtr,0,"double"),"uint",0)
 					loop % points.length()-1
 					{
-						numput(points[a_index+1][1],this.tBufferPtr,0,"float")
-						numput(points[a_index+1][2],this.tBufferPtr,4,"float")
+						numput(points[a_index+1][1]+xoffset,this.tBufferPtr,0,"float")
+						numput(points[a_index+1][2]+yoffset,this.tBufferPtr,4,"float")
 						DllCall(this.vTable(sink,10),"ptr",sink,"double",numget(this.tBufferPtr,0,"double"))
 					}
 					DllCall(this.vTable(sink,8),"ptr",sink,"uint",1)
 					DllCall(this.vTable(sink,9),"ptr",sink)
 				} else {
-					DllCall(this.vTable(sink,5),"ptr",sink,"float",points[1][1],"float",points[1][2],"uint",0)
+					DllCall(this.vTable(sink,5),"ptr",sink,"float",points[1][1]+xoffset,"float",points[1][2]+yoffset,"uint",0)
 					loop % points.length()-1
-						DllCall(this.vTable(sink,10),"ptr",sink,"float",points[a_index+1][1],"float",points[a_index+1][2])
+						DllCall(this.vTable(sink,10),"ptr",sink,"float",points[a_index+1][1]+xoffset,"float",points[a_index+1][2]+yoffset)
 					DllCall(this.vTable(sink,8),"ptr",sink,"uint",1)
 					DllCall(this.vTable(sink,9),"ptr",sink)
 				}
@@ -904,6 +905,8 @@ class ShinsOverlayClass {
 		DllCall("Gdiplus\GdipBitmapLockBits", "Ptr", bm, "Ptr", &r, "uint", 3, "int", 0x26200A, "Ptr", &bmdata)
 		scan := NumGet(bmdata, 16, "Ptr")
 		p := DllCall("GlobalAlloc", "uint", 0x40, "ptr", 16+((w*h)*4), "ptr")
+		DllCall(this._cacheImage,"Ptr",p,"Ptr",scan,"int",w,"int",h)
+		/*
 		loop % ((w*h)) {
 			pp := (a_index-1)*4
 			col := NumGet(scan+0,pp,"uint")
@@ -913,6 +916,7 @@ class ShinsOverlayClass {
 			NumPut(((col&0xFF)*a)/255,p+0,pp+2,"uchar")
 			NumPut(a,p+0,pp+3,"uchar")
 		}	
+		*/
 		DllCall("Gdiplus\GdipBitmapUnlockBits", "Ptr", bm, "Ptr", &bmdata)
 		DllCall("gdiplus\GdipDisposeImage", "ptr", bm)
 		VarSetCapacity(props,64,0)
