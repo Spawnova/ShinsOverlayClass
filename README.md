@@ -54,10 +54,10 @@ DrawLine(x1,y1,x2,y2,color,thickness:=1,rounded:=0)
 DrawLines(points,color,connect:=0,thickness:=1,rounded:=0)
 
 #DrawPolygon..............Draws a polygon outline, points must be in an array [[x,y],[x,y]] etc.
-DrawPolygon(points,color,thickness:=1,rounded:=0)
+DrawPolygon(points,color,thickness:=1,rounded:=0,xOffset:=0,yOffset:=0)
 
 #FillPolygon..............Fill a polygon, points must be in an array [[x,y],[x,y]] etc.
-FillPolygon(points,color)
+FillPolygon(points,color,xoffset:=0,yoffset:=0)
 
 #SetPosition..............Sets the overlay position, only when not attached
 SetPosition(x,y,w:=0,h:=0)
