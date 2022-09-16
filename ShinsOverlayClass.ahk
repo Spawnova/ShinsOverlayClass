@@ -628,10 +628,12 @@ class ShinsOverlayClass {
 	;points				:				An array of 2d points, example: [[0,0],[5,0],[0,5]]
 	;color				:				Color in 0xAARRGGBB or 0xRRGGBB format (if 0xRRGGBB then alpha is set to FF (255))
 	;thickness			:				Thickness of the line
+	;xOffset			:				X offset to draw the polygon array
+	;yOffset			:				Y offset to draw the polygon array
 	;
 	;return				;				1 on success; 0 otherwise
 
-	DrawPolygon(points,color,thickness:=1,rounded:=0) {
+	DrawPolygon(points,color,thickness:=1,rounded:=0,xOffset:=0,yOffset:=0) {
 		if (points.length() < 3)
 			return 0
 		
@@ -639,21 +641,21 @@ class ShinsOverlayClass {
 			if (DllCall(this.vTable(pGeom,17),"Ptr",pGeom,"ptr*",sink) = 0) {
 				this.SetBrushColor(color)
 				if (this.bits) {
-					numput(points[1][1],this.tBufferPtr,0,"float")
-					numput(points[1][2],this.tBufferPtr,4,"float")
+					numput(points[1][1]+xOffset,this.tBufferPtr,0,"float")
+					numput(points[1][2]+yOffset,this.tBufferPtr,4,"float")
 					DllCall(this.vTable(sink,5),"ptr",sink,"double",numget(this.tBufferPtr,0,"double"),"uint",1)
 					loop % points.length()-1
 					{
-						numput(points[a_index+1][1],this.tBufferPtr,0,"float")
-						numput(points[a_index+1][2],this.tBufferPtr,4,"float")
+						numput(points[a_index+1][1]+xOffset,this.tBufferPtr,0,"float")
+						numput(points[a_index+1][2]+yOffset,this.tBufferPtr,4,"float")
 						DllCall(this.vTable(sink,10),"ptr",sink,"double",numget(this.tBufferPtr,0,"double"))
 					}
 					DllCall(this.vTable(sink,8),"ptr",sink,"uint",1)
 					DllCall(this.vTable(sink,9),"ptr",sink)
 				} else {
-					DllCall(this.vTable(sink,5),"ptr",sink,"float",points[1][1],"float",points[1][2],"uint",1)
+					DllCall(this.vTable(sink,5),"ptr",sink,"float",points[1][1]+xOffset,"float",points[1][2]+yOffset,"uint",1)
 					loop % points.length()-1
-						DllCall(this.vTable(sink,10),"ptr",sink,"float",points[a_index+1][1],"float",points[a_index+1][2])
+						DllCall(this.vTable(sink,10),"ptr",sink,"float",points[a_index+1][1]+xOffset,"float",points[a_index+1][2]+yOffset)
 					DllCall(this.vTable(sink,8),"ptr",sink,"uint",1)
 					DllCall(this.vTable(sink,9),"ptr",sink)
 				}
@@ -673,6 +675,8 @@ class ShinsOverlayClass {
 	;
 	;points				:				An array of 2d points, example: [[0,0],[5,0],[0,5]]
 	;color				:				Color in 0xAARRGGBB or 0xRRGGBB format (if 0xRRGGBB then alpha is set to FF (255))
+	;xOffset			:				X offset to draw the filled polygon array
+	;yOffset			:				Y offset to draw the filled polygon array
 	;
 	;return				;				1 on success; 0 otherwise
 
