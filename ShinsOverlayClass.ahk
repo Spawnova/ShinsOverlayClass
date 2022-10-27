@@ -67,6 +67,7 @@ class ShinsOverlayClass {
 		this.lastCol := 0
 		this.drawing := 0
 		this.guiID := guiID
+		this.alwaysontop := alwaysontop
 		
 		this._cacheImage := this.mcode("VlOD7AiLRCQgD69EJBzB4AKFwA+OmgAAANl8JAaLVCQYi0wkFI00EA+3RCQGgMwMZolEJASNdgAPtloDMcCA+/8Pk8CDwgSDwQSJBCQPtkL92wQkiQQk2wQkD7ZC/NjJiQQk2wQkD7ZC/tjKiQQk2wQk3svZytlsJATfHCTZbCQGD7cEJIhB/NlsJATfHCTZbCQGD7cEJIhB/dlsJATfHCTZbCQGiFn/D7cEJIhB/jnWdYWDxAi4AQAAAFtew5CQ|RQ+vwUHB4AJFhcB+f0GD6AFBwegCTo1MggRmDx9EAABED7ZCAzHAZg/v22YP78lmD+/AZg/v0kGA+P8Pk8BIg8IESIPBBPMPKtgPtkL98w8qyA+2QvzzDyrAD7ZC/kSIQf/zDyrQ8w9Zy/MPWcPzD1nT8w8swohB/PMPLMGIQf3zDyzAiEH+STnRdZS4AQAAAMOQkJCQkJCQkJCQkJCQkA==")
 		this.LoadLib("d2d1","dwrite","dwmapi","gdiplus")
@@ -232,6 +233,10 @@ class ShinsOverlayClass {
 				this.AdjustWindow(x,y,w,h)
 				this.SetPosition(x,y)
 			}
+			if (!this.drawing and this.alwaysontop) {
+				winset,alwaysontop,on,% "ahk_id " this.hwnd
+			}
+			
 		} else {
 			if (!DllCall("GetWindowRect","ptr",this.hwnd,"ptr",this.tBufferPtr)) {
 				if (this.drawing) {
