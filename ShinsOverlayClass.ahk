@@ -208,7 +208,7 @@ class ShinsOverlayClass {
 	
 	BeginDraw() {
 		if (this.attachHWND) {
-			if (!DllCall("GetWindowRect","ptr",this.attachHWND,"ptr",this.tBufferPtr) or (this.attachForeground and DllCall("GetForegroundWindow") != this.attachHWND)) {
+			if (!DllCall("GetWindowRect","ptr",this.attachHWND,"ptr",this.tBufferPtr) or (this.attachForeground and DllCall("GetForegroundWindow","cdecl uint") != this.attachHWND)) {
 				if (this.drawing) {
 					DllCall(this.vTable(this.renderTarget,48),"Ptr",this.renderTarget)
 					DllCall(this.vTable(this.renderTarget,47),"Ptr",this.renderTarget,"Ptr",this.clrPtr)
