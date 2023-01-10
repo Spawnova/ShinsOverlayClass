@@ -100,7 +100,7 @@ class ShinsOverlayClass {
 		VarSetCapacity(margins,16)
 		NumPut(-1,margins,0,"int"), NumPut(-1,margins,4,"int"), NumPut(-1,margins,8,"int"), NumPut(-1,margins,12,"int")
 		if (DllCall("dwmapi\DwmExtendFrameIntoClientArea","Ptr",hwnd,"ptr",&margins) != 0) {
-			this.Err("Problem with DwmExtendFrameIntoClientArea","overlay will not function")
+			this.Err("Problem with DwmExtendFrameIntoClientArea","overlay will not function`n`nReloading the script usually fixes this")
 			return
 		}
 		DllCall("SetLayeredWindowAttributes","Ptr",hwnd,"Uint",0,"char",255,"uint",2)
@@ -130,7 +130,7 @@ class ShinsOverlayClass {
 		NumPut(hwnd,this.hrtPtr,0,"Ptr")
 		NumPut(width_orForeground,this.hrtPtr,a_ptrsize,"uint")
 		NumPut(height,this.hrtPtr,a_ptrsize+4,"uint")
-		NumPut(2,this.hrtPtr,a_ptrsize+8,"uint")
+		NumPut(0,this.hrtPtr,a_ptrsize+8,"uint")
 		if (DllCall(this.vTable(this.factory,14),"Ptr",this.factory,"Ptr",this.rtPtr,"ptr",this.hrtPtr,"Ptr*",renderTarget) != 0) {
 			this.Err("Problem creating renderTarget","overlay will not function")
 			return
@@ -349,10 +349,12 @@ class ShinsOverlayClass {
 	;									DropShadow ........	ds[hex color]			: Example > dsFF000000		(Default: DISABLED)
 	;									DropShadowXOffset . dsx[number]				: Example > dsx2			(Default: 1)
 	;									DropShadowYOffset . dsy[number]				: Example > dsy2			(Default: 1)
+	;									Outline ........... ol[hex color]			: Example > olFF000000		(Default: DISABLED)
 	;
 	;return				;				Void
 	
 	DrawText(text,x,y,size:=18,color:=0xFFFFFFFF,fontName:="Arial",extraOptions:="") {
+		local p
 		if (!RegExMatch(extraOptions,"w([\d\.]+)",w))
 			w1 := this.width
 		if (!RegExMatch(extraOptions,"h([\d\.]+)",h))
@@ -370,6 +372,8 @@ class ShinsOverlayClass {
 			if (!RegExMatch(extraOptions,"dsy([\d\.]+)",dsy))
 				dsy1 := 1
 			this.DrawTextShadow(p,text,x+dsx1,y+dsy1,w1,h1,"0x" ds1)
+		} else if (RegExMatch(extraOptions,"ol([a-fA-F\d]+)",ol)) {
+			this.DrawTextOutline(p,text,x,y,w1,h1,"0x" ol1)
 		}
 		
 		this.SetBrushColor(color)
@@ -665,8 +669,13 @@ class ShinsOverlayClass {
 					DllCall(this.vTable(sink,9),"ptr",sink)
 				}
 				
-				if (DllCall(this.vTable(this.renderTarget,22),"Ptr",this.renderTarget,"Ptr",pGeom,"ptr",this.brush,"float",thickness,"ptr",(rounded?this.strokeRounded:this.stroke)) = 0)
+				if (DllCall(this.vTable(this.renderTarget,22),"Ptr",this.renderTarget,"Ptr",pGeom,"ptr",this.brush,"float",thickness,"ptr",(rounded?this.strokeRounded:this.stroke)) = 0) {
+					DllCall(this.vTable(sink,2),"ptr",sink)
+					DllCall(this.vTable(pGeom,2),"Ptr",pGeom)
 					return 1
+				}
+				DllCall(this.vTable(sink,2),"ptr",sink)
+				DllCall(this.vTable(pGeom,2),"Ptr",pGeom)
 			}
 		}
 		
@@ -712,8 +721,14 @@ class ShinsOverlayClass {
 					DllCall(this.vTable(sink,9),"ptr",sink)
 				}
 				
-				if (DllCall(this.vTable(this.renderTarget,23),"Ptr",this.renderTarget,"Ptr",pGeom,"ptr",this.brush,"ptr",0) = 0)
+				if (DllCall(this.vTable(this.renderTarget,23),"Ptr",this.renderTarget,"Ptr",pGeom,"ptr",this.brush,"ptr",0) = 0) {
+					DllCall(this.vTable(sink,2),"ptr",sink)
+					DllCall(this.vTable(pGeom,2),"Ptr",pGeom)
 					return 1
+				}
+				DllCall(this.vTable(sink,2),"ptr",sink)
+				DllCall(this.vTable(pGeom,2),"Ptr",pGeom)
+				
 			}
 		}
 		
@@ -856,6 +871,18 @@ class ShinsOverlayClass {
 		NumPut(y+h,this.tBufferPtr,12,"float")
 		DllCall(this.vTable(this.renderTarget,27),"ptr",this.renderTarget,"wstr",text,"uint",strlen(text),"ptr",p,"ptr",this.tBufferPtr,"ptr",this.brush,"uint",0,"uint",0)
 	}
+	DrawTextOutline(p,text,x,y,w,h,color) {
+		static o := [[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1],[1,-1]]
+		this.SetBrushColor(color)
+		for k,v in o
+		{
+			NumPut(x+v[1],this.tBufferPtr,0,"float")
+			NumPut(y+v[2],this.tBufferPtr,4,"float")
+			NumPut(x+w+v[1],this.tBufferPtr,8,"float")
+			NumPut(y+h+v[2],this.tBufferPtr,12,"float")
+			DllCall(this.vTable(this.renderTarget,27),"ptr",this.renderTarget,"wstr",text,"uint",strlen(text),"ptr",p,"ptr",this.tBufferPtr,"ptr",this.brush,"uint",0,"uint",0)
+		}
+	}
 	Err(str*) {
 		s := ""
 		for k,v in str
@@ -894,6 +921,7 @@ class ShinsOverlayClass {
 		return this.GetAddress(key)
 	}
 	CacheImage(image) {
+		local p
 		if (this.imageCache.haskey(image))
 			return 1
 		if (image = "") {
@@ -959,6 +987,7 @@ class ShinsOverlayClass {
 		gui %guiID%:destroy
 	}
 	Mcode(str) {
+		local p
 		s := strsplit(str,"|")
 		if (s.length() != 2)
 			return
