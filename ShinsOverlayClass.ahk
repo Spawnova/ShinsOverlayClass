@@ -6,6 +6,8 @@
 ;
 ;Special thanks to teadrinker for helping me understand some 64bit param structures! -> https://www.autohotkey.com/boards/viewtopic.php?f=76&t=105420
 
+#Requires AutoHotkey v1.1.27+
+
 class ShinsOverlayClass {
 
 	;x_orTitle					:		x pos of overlay OR title of window to attach to
@@ -13,13 +15,14 @@ class ShinsOverlayClass {
 	;width_orForeground			:		width of overlay OR overlay is only drawn when the attached window is in the foreground (default 1)
 	;height						:		height of overlay
 	;alwaysOnTop				:		If enabled, the window will always appear over other windows
+	;vsync						:		If enabled vsync will cause the overlay to update no more than the monitors refresh rate, useful when looping without sleeps
 	;clickThrough				:		If enabled, mouse clicks will pass through the window onto the window beneath
 	;taskBarIcon				:		If enabled, the window will have a taskbar icon
 	;guiID						:		name of the ahk gui id for the overlay window
 	;
 	;notes						:		if planning to attach to window these parameters can all be left blank
 	
-	__New(x_orTitle:=0,y_orClient:=0,width_orForeground:=1,height:=0,alwaysOnTop:=1,clickThrough:=1,taskBarIcon:=0,guiID:="ShinsOverlayClass") {
+	__New(x_orTitle:=0,y_orClient:=0,width_orForeground:=1,height:=0,alwaysOnTop:=1,vsync:=0,clickThrough:=1,taskBarIcon:=0,guiID:="ShinsOverlayClass") {
 	
 	
 		;[input variables] you can change these to affect the way the script behaves
@@ -130,7 +133,7 @@ class ShinsOverlayClass {
 		NumPut(hwnd,this.hrtPtr,0,"Ptr")
 		NumPut(width_orForeground,this.hrtPtr,a_ptrsize,"uint")
 		NumPut(height,this.hrtPtr,a_ptrsize+4,"uint")
-		NumPut(0,this.hrtPtr,a_ptrsize+8,"uint")
+		NumPut((vsync?0:2),this.hrtPtr,a_ptrsize+8,"uint")
 		if (DllCall(this.vTable(this.factory,14),"Ptr",this.factory,"Ptr",this.rtPtr,"ptr",this.hrtPtr,"Ptr*",renderTarget) != 0) {
 			this.Err("Problem creating renderTarget","overlay will not function")
 			return
@@ -354,7 +357,7 @@ class ShinsOverlayClass {
 	;return				;				Void
 	
 	DrawText(text,x,y,size:=18,color:=0xFFFFFFFF,fontName:="Arial",extraOptions:="") {
-		local p
+		local
 		if (!RegExMatch(extraOptions,"w([\d\.]+)",w))
 			w1 := this.width
 		if (!RegExMatch(extraOptions,"h([\d\.]+)",h))
@@ -830,6 +833,7 @@ class ShinsOverlayClass {
 	;  internal functions used by the class
 	;########################################## 
 	AdjustWindow(byref x,byref y,byref w,byref h) {
+		local
 		DllCall("GetWindowInfo","ptr",(this.attachHWND ? this.attachHWND : this.hwnd),"ptr",this.tBufferPtr)
 		pp := (this.attachClient ? 20 : 4)
 		x1 := NumGet(this.tBufferPtr,pp,"int")
@@ -884,6 +888,7 @@ class ShinsOverlayClass {
 		}
 	}
 	Err(str*) {
+		local
 		s := ""
 		for k,v in str
 			s .= (s = "" ? "" : "`n`n") v
@@ -921,7 +926,7 @@ class ShinsOverlayClass {
 		return this.GetAddress(key)
 	}
 	CacheImage(image) {
-		local p
+		local
 		if (this.imageCache.haskey(image))
 			return 1
 		if (image = "") {
@@ -987,7 +992,7 @@ class ShinsOverlayClass {
 		gui %guiID%:destroy
 	}
 	Mcode(str) {
-		local p
+		local
 		s := strsplit(str,"|")
 		if (s.length() != 2)
 			return
