@@ -72,7 +72,8 @@ class ShinsOverlayClass {
 		this.guiID := guiID
 		this.alwaysontop := alwaysontop
 		
-		this._cacheImage := this.mcode("VlOD7AiLRCQgD69EJBzB4AKFwA+OmgAAANl8JAaLVCQYi0wkFI00EA+3RCQGgMwMZolEJASNdgAPtloDMcCA+/8Pk8CDwgSDwQSJBCQPtkL92wQkiQQk2wQkD7ZC/NjJiQQk2wQkD7ZC/tjKiQQk2wQk3svZytlsJATfHCTZbCQGD7cEJIhB/NlsJATfHCTZbCQGD7cEJIhB/dlsJATfHCTZbCQGiFn/D7cEJIhB/jnWdYWDxAi4AQAAAFtew5CQ|RQ+vwUHB4AJFhcB+f0GD6AFBwegCTo1MggRmDx9EAABED7ZCAzHAZg/v22YP78lmD+/AZg/v0kGA+P8Pk8BIg8IESIPBBPMPKtgPtkL98w8qyA+2QvzzDyrAD7ZC/kSIQf/zDyrQ8w9Zy/MPWcPzD1nT8w8swohB/PMPLMGIQf3zDyzAiEH+STnRdZS4AQAAAMOQkJCQkJCQkJCQkJCQkA==")
+		this._cacheImage := this.mcode("VVdWMfZTg+wMi0QkLA+vRCQoi1QkMMHgAoXAfmSLTCQki1wkIA+26gHIiUQkCGaQD7Z5A4PDBIPBBIn4D7bwD7ZB/g+vxpn3/YkEJA+2Qf0Pr8aZ9/2JRCQED7ZB/A+vxpn3/Q+2FCSIU/wPtlQkBIhT/YhD/on4iEP/OUwkCHWvg8QMifBbXl9dw5CQkJCQ|V1ZTRTHbRItUJEBFD6/BRo0MhQAAAABFhcl+YUGD6QFFD7bSSYnQQcHpAkqNdIoERQ+2WANBD7ZAAkmDwARIg8EEQQ+vw5lB9/qJx0EPtkD9QQ+vw5lB9/pBicFBD7ZA/ECIefxEiEn9QQ+vw0SIWf+ZQff6iEH+TDnGdbNEidhbXl/DkJCQkJCQkJCQkJCQ")
+		
 		this.LoadLib("d2d1","dwrite","dwmapi","gdiplus")
 		VarSetCapacity(gsi, 24, 0)
 		NumPut(1,gsi,0,"uint")
@@ -300,19 +301,25 @@ class ShinsOverlayClass {
 	;alpha				:				Image transparency, float between 0 and 1
 	;drawCentered		:				Draw the image centered on dstX/dstY, otherwise dstX/dstY will be the top left of the image
 	;rotation			:				Image rotation in degrees (0-360)
+	;rotationOffsetX	:				X offset to base rotations on (defaults to center x)
+	;rotationOffsetY	:				Y offset to base rotations on (defaults to center y)
 	;
 	;return				;				Void
 	
-	DrawImage(image,dstX,dstY,dstW:=0,dstH:=0,srcX:=0,srcY:=0,srcW:=0,srcH:=0,alpha:=1,drawCentered:=0,rotation:=0) {
+	DrawImage(image,dstX,dstY,dstW:=0,dstH:=0,srcX:=0,srcY:=0,srcW:=0,srcH:=0,alpha:=1,drawCentered:=0,rotation:=0,rotOffX:=0,rotOffY:=0) {
 		if (!i := this.imageCache[image]) {
 			i := this.cacheImage(image)
 		}
-		x := dstX-(drawCentered?i.w/2:0)
-		y := dstY-(drawCentered?i.h/2:0)
+		if (dstW <= 0)
+			dstW := i.w
+		if (dstH <= 0)
+			dstH := i.h
+		x := dstX-(drawCentered?dstW/2:0)
+		y := dstY-(drawCentered?dstH/2:0)
 		NumPut(x,this.rect1Ptr,0,"float")
 		NumPut(y,this.rect1Ptr,4,"float")
-		NumPut(x + (dstW=0?i.w:dstW),this.rect1Ptr,8,"float")
-		NumPut(y + (dstH=0?i.h:dstH),this.rect1Ptr,12,"float")
+		NumPut(x + dstW,this.rect1Ptr,8,"float")
+		NumPut(y + dstH,this.rect1Ptr,12,"float")
 		NumPut(srcX,this.rect2Ptr,0,"float")
 		NumPut(srcY,this.rect2Ptr,4,"float")
 		NumPut(srcX + (srcW=0?i.w:srcW),this.rect2Ptr,8,"float")
@@ -320,11 +327,17 @@ class ShinsOverlayClass {
 		
 		if (rotation != 0) {
 			if (this.bits) {
-				NumPut(dstX+(dstW/2),this.tBufferPtr,0,"float")
-				NumPut(dstY+(dstH/2),this.tBufferPtr,4,"float")
+				if (rotOffX or rotOffY) {
+					NumPut(dstX+rotOffX,this.tBufferPtr,0,"float")
+					NumPut(dstY+rotOffY,this.tBufferPtr,4,"float")
+					tooltip k
+				} else {
+					NumPut(dstX+(drawCentered?0:dstW/2),this.tBufferPtr,0,"float")
+					NumPut(dstY+(drawCentered?0:dstH/2),this.tBufferPtr,4,"float")
+				}
 				DllCall("d2d1\D2D1MakeRotateMatrix","float",rotation,"double",NumGet(this.tBufferPtr,"double"),"ptr",this.matrixPtr)
 			} else {
-				DllCall("d2d1\D2D1MakeRotateMatrix","float",rotation,"float",dstX+(dstW/2),"float",dstY+(dstH/2),"ptr",this.matrixPtr)
+				DllCall("d2d1\D2D1MakeRotateMatrix","float",rotation,"float",dstX+(drawCentered?0:dstW/2),"float",dstY+(drawCentered?0:dstH/2),"ptr",this.matrixPtr)
 			}
 			DllCall(this.vTable(this.renderTarget,30),"ptr",this.renderTarget,"ptr",this.matrixPtr)
 			DllCall(this.vTable(this.renderTarget,26),"ptr",this.renderTarget,"ptr",i.p,"ptr",this.rect1Ptr,"float",alpha,"uint",this.interpolationMode,"ptr",this.rect2Ptr)
@@ -947,18 +960,7 @@ class ShinsOverlayClass {
 		DllCall("Gdiplus\GdipBitmapLockBits", "Ptr", bm, "Ptr", &r, "uint", 3, "int", 0x26200A, "Ptr", &bmdata)
 		scan := NumGet(bmdata, 16, "Ptr")
 		p := DllCall("GlobalAlloc", "uint", 0x40, "ptr", 16+((w*h)*4), "ptr")
-		DllCall(this._cacheImage,"Ptr",p,"Ptr",scan,"int",w,"int",h)
-		/*
-		loop % ((w*h)) {
-			pp := (a_index-1)*4
-			col := NumGet(scan+0,pp,"uint")
-			a := (col&0xFF000000)>>24
-			NumPut(((col&0xFF0000)>>16)*a/255,p+0,pp+0,"uchar")
-			NumPut(((col&0xFF00)>>8)*a/255,p+0,pp+1,"uchar")
-			NumPut(((col&0xFF)*a)/255,p+0,pp+2,"uchar")
-			NumPut(a,p+0,pp+3,"uchar")
-		}	
-		*/
+		DllCall(this._cacheImage,"Ptr",p,"Ptr",scan,"int",w,"int",h,"uchar",255)
 		DllCall("Gdiplus\GdipBitmapUnlockBits", "Ptr", bm, "Ptr", &bmdata)
 		DllCall("gdiplus\GdipDisposeImage", "ptr", bm)
 		VarSetCapacity(props,64,0)
