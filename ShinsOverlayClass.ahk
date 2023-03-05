@@ -28,7 +28,7 @@ class ShinsOverlayClass {
 		;[input variables] you can change these to affect the way the script behaves
 		
 		this.interpolationMode := 0 ;0 = nearestNeighbor, 1 = linear ;affects DrawImage() scaling 
-	
+		this.data := []
 	
 	
 		;[output variables] you can read these to get extra info, DO NOT MODIFY THESE
