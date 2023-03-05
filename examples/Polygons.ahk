@@ -18,7 +18,7 @@ drawPoints := [] ;set example polygons to be empty, user will define these
 fillPoints := []
 bothPoints := []
 
-overlay := new ShinsOverlayClass(x,y,width,height,0,0,1)
+overlay := new ShinsOverlayClass(x,y,width,height,0,0,0)
 opacity := 0xBB
 
 onmessage(0x201,"WindowMove")
