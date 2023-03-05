@@ -6,13 +6,13 @@ y := floor(a_screenheight * 0.2)
 width := floor(a_screenwidth * 0.6)
 height := floor(a_screenheight * 0.6)
 
-overlay := new ShinsOverlayClass(x,y,width,height,0,0,1)
+overlay := new ShinsOverlayClass(x,y,width,height,0,0,0)
 opacity := 0xBB
 
 
 step := 1
 stepsText := []
-stepsText.push("Welcome to the Everything example!`nHere I will demonstrate all of the functions of the class`nPress Left or Right to progress!`nUse scrollwheel to change window opacity")
+stepsText.push("Welcome to the Everything example!`nHere I will demonstrate some of the functions of the class`nPress Left or Right to progress!`nUse scrollwheel to change window opacity")
 stepsText.push("Drawing Lines!`nDrawLine(x1, y1, x2, y2, color, thickness:=1, rounded:=0)`n`n")
 stepsText.push("Drawing Lines!`nA bunch of little lines could look like rain!")
 stepsText.push("Drawing circles and ellipses!`nDrawEllipse(x, y, w, h, color, thickness:=1)`nFillEllipse(x, y, w, h, color)`nDrawCircle(x, y, radius, color, thickness:=1)`nFillCircle(x, y, radius, color)")
