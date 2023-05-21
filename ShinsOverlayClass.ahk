@@ -22,13 +22,13 @@ class ShinsOverlayClass {
 	;
 	;notes						:		if planning to attach to window these parameters can all be left blank
 	
-	__New(x_orTitle:=0,y_orClient:=0,width_orForeground:=1,height:=0,alwaysOnTop:=1,vsync:=0,clickThrough:=1,taskBarIcon:=0,guiID:="ShinsOverlayClass") {
+	__New(x_orTitle:=0,y_orClient:=1,width_orForeground:=1,height:=0,alwaysOnTop:=1,vsync:=0,clickThrough:=1,taskBarIcon:=0,guiID:="ShinsOverlayClass") {
 	
 	
 		;[input variables] you can change these to affect the way the script behaves
 		
 		this.interpolationMode := 0 ;0 = nearestNeighbor, 1 = linear ;affects DrawImage() scaling 
-		this.data := []
+		this.data := []				;reserved name for general data storage
 	
 	
 		;[output variables] you can read these to get extra info, DO NOT MODIFY THESE
@@ -70,6 +70,7 @@ class ShinsOverlayClass {
 		this.lastCol := 0
 		this.drawing := 0
 		this.guiID := guiID
+		this.owned := 0
 		this.alwaysontop := alwaysontop
 		
 		this._cacheImage := this.mcode("VVdWMfZTg+wMi0QkLA+vRCQoi1QkMMHgAoXAfmSLTCQki1wkIA+26gHIiUQkCGaQD7Z5A4PDBIPBBIn4D7bwD7ZB/g+vxpn3/YkEJA+2Qf0Pr8aZ9/2JRCQED7ZB/A+vxpn3/Q+2FCSIU/wPtlQkBIhT/YhD/on4iEP/OUwkCHWvg8QMifBbXl9dw5CQkJCQ|V1ZTRTHbRItUJEBFD6/BRo0MhQAAAABFhcl+YUGD6QFFD7bSSYnQQcHpAkqNdIoERQ+2WANBD7ZAAkmDwARIg8EEQQ+vw5lB9/qJx0EPtkD9QQ+vw5lB9/pBicFBD7ZA/ECIefxEiEn9QQ+vw0SIWf+ZQff6iEH+TDnGdbNEidhbXl/DkJCQkJCQkJCQkJCQ")
@@ -89,7 +90,7 @@ class ShinsOverlayClass {
 			gui %guiID%: +AlwaysOnTop
 		if (!taskBarIcon)
 			gui %guiID%: +ToolWindow
-
+		
 		this.hwnd := hwnd
 		DllCall("ShowWindow","ptr",this.hwnd,"uint",(clickThrough ? 8 : 1))
 
@@ -171,6 +172,7 @@ class ShinsOverlayClass {
 	;title				:				Title of the window (or other type of identifier such as 'ahk_exe notepad.exe' etc..
 	;attachToClientArea	:				Whether or not to attach the overlay to the client area, window area is used otherwise
 	;foreground			:				Whether or not to only draw the overlay if attached window is active in the foreground, otherwise always draws
+	;setOwner			:				Sets the ownership of the overlay window to the target window
 	;
 	;return				;				Returns 1 if either attached window is active in the foreground or no window is attached; 0 otherwise
 	;
@@ -178,7 +180,7 @@ class ShinsOverlayClass {
 	;									updated to the attached windows position/size
 	;									Could use SetParent but it introduces other issues, I'll explore further later
 	
-	AttachToWindow(title,AttachToClientArea:=0,foreground:=1) {
+	AttachToWindow(title,AttachToClientArea:=0,foreground:=1,setOwner:=0) {
 		if (title = "") {
 			this.Err("AttachToWindow: Error","Expected title string, but empty variable was supplied!")
 			return 0
@@ -187,6 +189,8 @@ class ShinsOverlayClass {
 			this.Err("AttachToWindow: Error","Could not find window - " title)
 			return 0
 		}
+		numput(this.attachHwnd,this.tbufferptr,0,"UPtr")
+		this.attachHWND := numget(this.tbufferptr,0,"Ptr")
 		if (!DllCall("GetWindowRect","ptr",this.attachHWND,"ptr",this.tBufferPtr)) {
 			this.Err("AttachToWindow: Error","Problem getting window rect, is window minimized?")
 			return 0
@@ -201,6 +205,15 @@ class ShinsOverlayClass {
 		NumPut(this.height,newSize,4,"uint")
 		DllCall(this.vTable(this.renderTarget,58),"Ptr",this.renderTarget,"ptr",&newsize)
 		this.SetPosition(x,y,this.width,this.height)
+		if (setOwner) {
+			this.alwaysontop := 0
+			WinSet, AlwaysOnTop, off, % "ahk_id " this.hwnd
+			this.owned := 1
+			dllcall("SetWindowLongPtr","ptr",this.hwnd,"int",-8,"uptr",this.attachHWND)
+			this.SetPosition(this.x,this.y)
+		} else {
+			this.owned := 0
+		}
 	}
 	
 	
@@ -213,7 +226,7 @@ class ShinsOverlayClass {
 	
 	BeginDraw() {
 		if (this.attachHWND) {
-			if (!DllCall("GetWindowRect","ptr",this.attachHWND,"ptr",this.tBufferPtr) or (this.attachForeground and DllCall("GetForegroundWindow","cdecl uint") != this.attachHWND)) {
+			if (!DllCall("GetWindowRect","ptr",this.attachHWND,"ptr",this.tBufferPtr) or (this.attachForeground and DllCall("GetForegroundWindow","cdecl Ptr") != this.attachHWND)) {
 				if (this.drawing) {
 					DllCall(this.vTable(this.renderTarget,48),"Ptr",this.renderTarget)
 					DllCall(this.vTable(this.renderTarget,47),"Ptr",this.renderTarget,"Ptr",this.clrPtr)
@@ -347,6 +360,76 @@ class ShinsOverlayClass {
 			DllCall(this.vTable(this.renderTarget,26),"ptr",this.renderTarget,"ptr",i.p,"ptr",this.rect1Ptr,"float",alpha,"uint",this.interpolationMode,"ptr",this.rect2Ptr)
 		}
 	}
+	
+	
+	;####################################################################################################################################################################################################################################
+	;GetTextMetrics
+	;
+	;text				:				The text to get the metrics of
+	;size				:				Font size to measure with
+	;fontName			:				Name of the font to use
+	;maxWidth			:				Max width (smaller width may cause wrapping)
+	;maxHeight			:				Max Height
+	;
+	;return				;				An array containing width, height and line count of the string
+	;
+	;Notes				;				Used to measure a string before drawing it
+	
+	GetTextMetrics(text,size,fontName,maxWidth:=5000,maxHeight:=5000) {
+		local
+		if (!p := this.fonts[fontName size]) {
+			p := this.CacheFont(fontName,size)
+		}
+		varsetcapacity(bf,64)
+		DllCall(this.vTable(this.wFactory,18),"ptr",this.wFactory,"WStr",text,"uint",strlen(text),"Ptr",p,"float",maxWidth,"float",maxHeight,"Ptr*",layout)
+		DllCall(this.vTable(layout,60),"ptr",layout,"ptr",&bf,"uint")
+		
+		w := numget(bf,8,"float")
+		wTrailing := numget(bf,12,"float")
+		h := numget(bf,16,"float")
+		
+		DllCall(this.vTable(layout,2),"ptr",layout)
+		
+		return {w:w,width:w,h:h,height:h,wt:wTrailing,widthTrailing:w,lines:numget(bf,32,"uint")}
+		
+	}
+	
+	
+	;####################################################################################################################################################################################################################################
+	;SetTextRenderParams
+	;
+	;gamma				:				Gamma value ................. (1 > 256)
+	;contrast			:				Contrast value .............. (0.0 > 1.0)
+	;clearType			:				Clear type level ............ (0.0 > 1.0)
+	;pixelGeom			:				
+	;									0 - DWRITE_PIXEL_GEOMETRY_FLAT
+    ;									1 - DWRITE_PIXEL_GEOMETRY_RGB
+    ;									2 - DWRITE_PIXEL_GEOMETRY_BGR
+	;
+	;renderMode			:				
+    ; 									0 - DWRITE_RENDERING_MODE_DEFAULT
+    ; 									1 - DWRITE_RENDERING_MODE_ALIASED
+    ; 									2 - DWRITE_RENDERING_MODE_GDI_CLASSIC
+    ; 									3 - DWRITE_RENDERING_MODE_GDI_NATURAL
+    ; 									4 - DWRITE_RENDERING_MODE_NATURAL
+    ; 									5 - DWRITE_RENDERING_MODE_NATURAL_SYMMETRIC
+    ; 									6 - DWRITE_RENDERING_MODE_OUTLINE
+	;									7 - DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC
+	;									8 - DWRITE_RENDERING_MODE_CLEARTYPE_GDI_NATURAL
+	;									9 - DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL
+	;									10 - DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC
+	;
+	;return				;				Void
+	;
+	;Notes				;				Used to affect how text is rendered
+	
+	SetTextRenderParams(gamma:=1,contrast:=0,cleartype:=1,pixelGeom:=0,renderMode:=0) {
+		local
+		DllCall(this.vTable(this.wFactory,12),"ptr",this.wFactory,"Float",gamma,"Float",contrast,"Float",cleartype,"Uint",pixelGeom,"Uint",renderMode,"Ptr*",params) "`n" params
+		DllCall(this.vTable(this.renderTarget,36),"Ptr",this.renderTarget,"Ptr",params)
+	}
+	
+	
 	
 	
 	;####################################################################################################################################################################################################################################
