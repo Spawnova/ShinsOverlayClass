@@ -111,7 +111,7 @@ class ShinsOverlayClass {
 			return
 		}
 		this.factory := pOut
-		NumPut("float",1,this.tBufferPtr,16)
+		NumPut("float",255,this.tBufferPtr,16)
 		if (DllCall(this.vTable(this.factory,11),"ptr",this.factory,"ptr",this.tBufferPtr,"ptr",0,"uint",0,"ptr*",&pOut) != 0) {
 			this.Err("Problem creating stroke","overlay will not function")
 			return
@@ -120,7 +120,7 @@ class ShinsOverlayClass {
 		NumPut("uint",2,this.tBufferPtr,0)
 		NumPut("uint",2,this.tBufferPtr,4)
 		NumPut("uint",2,this.tBufferPtr,12)
-		NumPut("float",1,this.tBufferPtr,16)
+		NumPut("float",255,this.tBufferPtr,16)
 		if (DllCall(this.vTable(this.factory,11),"ptr",this.factory,"ptr",this.tBufferPtr,"ptr",0,"uint",0,"ptr*",&pOut) != 0) {
 			this.Err("Problem creating rounded stroke","overlay will not function")
 			return
