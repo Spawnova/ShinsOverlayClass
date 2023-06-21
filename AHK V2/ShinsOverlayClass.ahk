@@ -71,6 +71,7 @@ class ShinsOverlayClass {
 		this.drawing := 0
 		this.guiID := guiID
 		this.owned := 0
+		this.lastSize := 0
 		this.alwaysontop := alwaysontop
 		pOut := 0
 		
