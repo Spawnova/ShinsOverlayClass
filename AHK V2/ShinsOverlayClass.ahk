@@ -846,9 +846,10 @@ class ShinsOverlayClass {
 	;notes						:			Clears the overlay, essentially the same as running BegindDraw followed by EndDraw
 	
 	Clear() {
+		local pOut:=0
 		DllCall(this.vTable(this.renderTarget,48),"Ptr",this.renderTarget)
 		DllCall(this.vTable(this.renderTarget,47),"Ptr",this.renderTarget,"Ptr",this.clrPtr)
-		DllCall(this.vTable(this.renderTarget,49),"Ptr",this.renderTarget,"int64*",&tag1,"int64*",&tag2)
+		DllCall(this.vTable(this.renderTarget,49),"Ptr",this.renderTarget,"int64*",&pOut,"int64*",&pOut)
 	}
 	
 	
