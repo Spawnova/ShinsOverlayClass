@@ -1073,6 +1073,12 @@ class ShinsOverlayClass {
 	}
 	__Delete() {
 		DllCall("gdiplus\GdiplusShutdown", "Ptr*", this.gdiplusToken)
+		DllCall(this.vTable(this.factory,2),"ptr",this.factory)
+		DllCall(this.vTable(this.stroke,2),"ptr",this.stroke)
+		DllCall(this.vTable(this.strokeRounded,2),"ptr",this.strokeRounded)
+		DllCall(this.vTable(this.renderTarget,2),"ptr",this.renderTarget)
+		DllCall(this.vTable(this.brush,2),"ptr",this.brush)
+		DllCall(this.vTable(this.wfactory,2),"ptr",this.wfactory)
 		guiID := this.guiID
 		gui %guiID%:destroy
 	}
