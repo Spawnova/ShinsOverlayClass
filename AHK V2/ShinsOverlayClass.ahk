@@ -103,18 +103,18 @@ class ShinsOverlayClass {
 		margins := Buffer(16,0)
 		NumPut("int",-1,margins,0), NumPut("int",-1,margins,4), NumPut("int",-1,margins,8), NumPut("int",-1,margins,12)
 		if (DllCall("dwmapi\DwmExtendFrameIntoClientArea","Ptr",hwnd,"ptr",margins) != 0) {
-			this.Err("Problem with DwmExtendFrameIntoClientArea","overlay will not function`n`nReloading the script usually fixes this")
+			this.Err("Problem with DwmExtendFrameIntoClientArea","overlay will not function`n`nReloading the script usually fixes this`n`nError: " DllCall("GetLastError","uint"))
 			return
 		}
 		DllCall("SetLayeredWindowAttributes","Ptr",hwnd,"Uint",0,"char",255,"uint",2)
 		if (DllCall("d2d1\D2D1CreateFactory","uint",1,"Ptr",clsidFactory,"uint*",0,"Ptr*",&pOut) != 0) {
-			this.Err("Problem creating factory","overlay will not function")
+			this.Err("Problem creating factory","overlay will not function`n`nError: " DllCall("GetLastError","uint"))
 			return
 		}
 		this.factory := pOut
 		NumPut("float",255,this.tBufferPtr,16)
 		if (DllCall(this.vTable(this.factory,11),"ptr",this.factory,"ptr",this.tBufferPtr,"ptr",0,"uint",0,"ptr*",&pOut) != 0) {
-			this.Err("Problem creating stroke","overlay will not function")
+			this.Err("Problem creating stroke","overlay will not function`n`nError: " DllCall("GetLastError","uint"))
 			return
 		}
 		this.stroke := pOut
@@ -123,7 +123,7 @@ class ShinsOverlayClass {
 		NumPut("uint",2,this.tBufferPtr,12)
 		NumPut("float",255,this.tBufferPtr,16)
 		if (DllCall(this.vTable(this.factory,11),"ptr",this.factory,"ptr",this.tBufferPtr,"ptr",0,"uint",0,"ptr*",&pOut) != 0) {
-			this.Err("Problem creating rounded stroke","overlay will not function")
+			this.Err("Problem creating rounded stroke","overlay will not function`n`nError: " DllCall("GetLastError","uint"))
 			return
 		}
 		this.strokeRounded := pOut
@@ -135,20 +135,20 @@ class ShinsOverlayClass {
 		NumPut("uint",height,this.hrtPtr,a_ptrsize+4)
 		NumPut("uint",(vsync?0:2),this.hrtPtr,a_ptrsize+8)
 		if (DllCall(this.vTable(this.factory,14),"Ptr",this.factory,"Ptr",this.rtPtr,"ptr",this.hrtPtr,"Ptr*",&pOut) != 0) {
-			this.Err("Problem creating renderTarget","overlay will not function")
+			this.Err("Problem creating renderTarget","overlay will not function`n`nError: " DllCall("GetLastError","uint"))
 			return
 		}
 		this.renderTarget := pOut
 		NumPut("float",1,this.matrixPtr,0)
 		this.SetIdentity(4)
 		if (DllCall(this.vTable(this.renderTarget,8),"Ptr",this.renderTarget,"Ptr",this.colPtr,"Ptr",this.matrixPtr,"Ptr*",&pOut) != 0) {
-			this.Err("Problem creating brush","overlay will not function")
+			this.Err("Problem creating brush","overlay will not function`n`nError: " DllCall("GetLastError","uint"))
 			return
 		}
 		this.brush := pOut
 		DllCall(this.vTable(this.renderTarget,32),"Ptr",this.renderTarget,"Uint",1)
 		if (DllCall("dwrite\DWriteCreateFactory","uint",0,"Ptr",clsidwFactory,"Ptr*",&pOut) != 0) {
-			this.Err("Problem creating writeFactory","overlay will not function")
+			this.Err("Problem creating writeFactory","overlay will not function`n`nError: " DllCall("GetLastError","uint"))
 			return
 		}
 		this.wFactory := pOut
@@ -190,7 +190,7 @@ class ShinsOverlayClass {
 		numput("Uptr",this.attachHwnd,this.tbufferptr,0)
 		this.attachHWND := numget(this.tbufferptr,0,"Ptr")
 		if (!DllCall("GetWindowRect","ptr",this.attachHWND,"ptr",this.tBufferPtr)) {
-			this.Err("AttachToWindow: Error","Problem getting window rect, is window minimized?")
+			this.Err("AttachToWindow: Error","Problem getting window rect, is window minimized?`n`nError: " DllCall("GetLastError","uint"))
 			return 0
 		}
 		
