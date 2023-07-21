@@ -93,7 +93,7 @@ class ShinsOverlayClass {
 			gui %guiID%: +ToolWindow
 		
 		this.hwnd := hwnd
-		DllCall("ShowWindow","ptr",this.hwnd,"uint",(clickThrough ? 8 : 1))
+		DllCall("ShowWindow","Uptr",this.hwnd,"uint",(clickThrough ? 8 : 1))
 
 		this.tBufferPtr := this.SetVarCapacity("ttBuffer",4096)
 		this.rect1Ptr := this.SetVarCapacity("_rect1",64)
@@ -105,12 +105,12 @@ class ShinsOverlayClass {
 		this.clrPtr := this.SetVarCapacity("_clrPtr",64)
 		VarSetCapacity(margins,16)
 		NumPut(-1,margins,0,"int"), NumPut(-1,margins,4,"int"), NumPut(-1,margins,8,"int"), NumPut(-1,margins,12,"int")
-		ext := DllCall("dwmapi\DwmExtendFrameIntoClientArea","Ptr",hwnd,"ptr",&margins,"uint")
+		ext := DllCall("dwmapi\DwmExtendFrameIntoClientArea","Uptr",hwnd,"ptr",&margins,"uint")
 		if (ext != 0) {
 			this.Err("Problem with DwmExtendFrameIntoClientArea","overlay will not function`n`nReloading the script usually fixes this`n`nError: " DllCall("GetLastError","uint") " / " ext)
 			return
 		}
-		DllCall("SetLayeredWindowAttributes","Ptr",hwnd,"Uint",0,"char",255,"uint",2)
+		DllCall("SetLayeredWindowAttributes","Uptr",hwnd,"Uint",0,"char",255,"uint",2)
 		if (DllCall("d2d1\D2D1CreateFactory","uint",1,"Ptr",&clsidFactory,"uint*",0,"Ptr*",factory) != 0) {
 			this.Err("Problem creating factory","overlay will not function`n`nError: " DllCall("GetLastError","uint"))
 			return
@@ -134,7 +134,7 @@ class ShinsOverlayClass {
 		NumPut(1,this.rtPtr,8,"uint")
 		NumPut(96,this.rtPtr,12,"float")
 		NumPut(96,this.rtPtr,16,"float")
-		NumPut(hwnd,this.hrtPtr,0,"Ptr")
+		NumPut(hwnd,this.hrtPtr,0,"Uptr")
 		NumPut(width_orForeground,this.hrtPtr,a_ptrsize,"uint")
 		NumPut(height,this.hrtPtr,a_ptrsize+4,"uint")
 		NumPut((vsync?0:2),this.hrtPtr,a_ptrsize+8,"uint")
@@ -192,8 +192,8 @@ class ShinsOverlayClass {
 			return 0
 		}
 		numput(this.attachHwnd,this.tbufferptr,0,"UPtr")
-		this.attachHWND := numget(this.tbufferptr,0,"Ptr")
-		if (!DllCall("GetWindowRect","ptr",this.attachHWND,"ptr",this.tBufferPtr)) {
+		this.attachHWND := numget(this.tbufferptr,0,"Uptr")
+		if (!DllCall("GetWindowRect","Uptr",this.attachHWND,"ptr",this.tBufferPtr)) {
 			this.Err("AttachToWindow: Error","Problem getting window rect, is window minimized?`n`nError: " DllCall("GetLastError","uint"))
 			return 0
 		}
@@ -211,7 +211,7 @@ class ShinsOverlayClass {
 			this.alwaysontop := 0
 			WinSet, AlwaysOnTop, off, % "ahk_id " this.hwnd
 			this.owned := 1
-			dllcall("SetWindowLongPtr","ptr",this.hwnd,"int",-8,"uptr",this.attachHWND)
+			dllcall("SetWindowLongPtr","Uptr",this.hwnd,"int",-8,"Uptr",this.attachHWND)
 			this.SetPosition(this.x,this.y)
 		} else {
 			this.owned := 0
@@ -228,7 +228,7 @@ class ShinsOverlayClass {
 	
 	BeginDraw() {
 		if (this.attachHWND) {
-			if (!DllCall("GetWindowRect","ptr",this.attachHWND,"ptr",this.tBufferPtr) or (this.attachForeground and DllCall("GetForegroundWindow","cdecl Ptr") != this.attachHWND)) {
+			if (!DllCall("GetWindowRect","Uptr",this.attachHWND,"ptr",this.tBufferPtr) or (this.attachForeground and DllCall("GetForegroundWindow","cdecl Ptr") != this.attachHWND)) {
 				if (this.drawing) {
 					DllCall(this.vTable(this.renderTarget,48),"Ptr",this.renderTarget)
 					DllCall(this.vTable(this.renderTarget,47),"Ptr",this.renderTarget,"Ptr",this.clrPtr)
@@ -257,7 +257,7 @@ class ShinsOverlayClass {
 			}
 			
 		} else {
-			if (!DllCall("GetWindowRect","ptr",this.hwnd,"ptr",this.tBufferPtr)) {
+			if (!DllCall("GetWindowRect","Uptr",this.hwnd,"ptr",this.tBufferPtr)) {
 				if (this.drawing) {
 					DllCall(this.vTable(this.renderTarget,48),"Ptr",this.renderTarget)
 					DllCall(this.vTable(this.renderTarget,47),"Ptr",this.renderTarget,"Ptr",this.clrPtr)
@@ -859,7 +859,7 @@ class ShinsOverlayClass {
 			NumPut(this.height := h,newSize,4,"uint")
 			DllCall(this.vTable(this.renderTarget,58),"Ptr",this.renderTarget,"ptr",&newsize)
 		}
-		DllCall("MoveWindow","Ptr",this.hwnd,"int",x,"int",y,"int",this.width,"int",this.height,"char",1)
+		DllCall("MoveWindow","Uptr",this.hwnd,"int",x,"int",y,"int",this.width,"int",this.height,"char",1)
 	}
 	
 	
@@ -932,7 +932,7 @@ class ShinsOverlayClass {
 	;########################################## 
 	AdjustWindow(byref x,byref y,byref w,byref h) {
 		local
-		DllCall("GetWindowInfo","ptr",(this.attachHWND ? this.attachHWND : this.hwnd),"ptr",this.tBufferPtr)
+		DllCall("GetWindowInfo","Uptr",(this.attachHWND ? this.attachHWND : this.hwnd),"ptr",this.tBufferPtr)
 		pp := (this.attachClient ? 20 : 4)
 		x1 := NumGet(this.tBufferPtr,pp,"int")
 		y1 := NumGet(this.tBufferPtr,pp+4,"int")
