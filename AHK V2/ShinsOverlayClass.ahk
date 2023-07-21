@@ -18,11 +18,11 @@ class ShinsOverlayClass {
 	;vsync						:		If enabled vsync will cause the overlay to update no more than the monitors refresh rate, useful when looping without sleeps
 	;clickThrough				:		If enabled, mouse clicks will pass through the window onto the window beneath
 	;taskBarIcon				:		If enabled, the window will have a taskbar icon
-	;guiID						:		name of the ahk gui id for the overlay window
+	;guiID						:		name of the ahk gui id for the overlay window, if 0 defaults to "ShinsOverlayClass_TICKCOUNT"
 	;
 	;notes						:		if planning to attach to window these parameters can all be left blank
 	
-	__New(x_orTitle:=0,y_orClient:=1,width_orForeground:=1,height:=0,alwaysOnTop:=1,vsync:=0,clickThrough:=1,taskBarIcon:=0,guiID:="ShinsOverlayClass") {
+	__New(x_orTitle:=0,y_orClient:=1,width_orForeground:=1,height:=0,alwaysOnTop:=1,vsync:=0,clickThrough:=1,taskBarIcon:=0,guiID:=0) {
 	
 	
 		;[input variables] you can change these to affect the way the script behaves
@@ -69,7 +69,7 @@ class ShinsOverlayClass {
 		this.offY := -y_orClient
 		this.lastCol := 0
 		this.drawing := 0
-		this.guiID := guiID
+		this.guiID := (guiID = 0 ? "ShinsOverlayClass_" a_tickcount : guiID)
 		this.owned := 0
 		this.lastSize := 0
 		this.alwaysontop := alwaysontop
@@ -87,7 +87,7 @@ class ShinsOverlayClass {
 		this._guid("{06152247-6f50-465a-9245-118bfd3b6007}",&clsidFactory)
 		this._guid("{b859ee5a-d838-4b5b-a2e8-1adc7d93db48}",&clsidwFactory)
 		
-		this.gui := Gui("-DPIScale -Caption +E0x80000" (clickthrough ? " +E0x20" : "") (alwaysontop ? " +Alwaysontop" : "") (!taskBarIcon ? " +toolwindow" : ""),guiID)
+		this.gui := Gui("-DPIScale -Caption +E0x80000" (clickthrough ? " +E0x20" : "") (alwaysontop ? " +Alwaysontop" : "") (!taskBarIcon ? " +toolwindow" : ""),this.guiID)
 		
 		this.hwnd := hwnd := this.gui.hwnd
 		DllCall("ShowWindow","ptr",this.hwnd,"uint",(clickThrough ? 8 : 1))
