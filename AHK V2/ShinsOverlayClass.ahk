@@ -102,8 +102,9 @@ class ShinsOverlayClass {
 		this.clrPtr :=  Buffer(64,0)
 		margins := Buffer(16,0)
 		NumPut("int",-1,margins,0), NumPut("int",-1,margins,4), NumPut("int",-1,margins,8), NumPut("int",-1,margins,12)
-		if (DllCall("dwmapi\DwmExtendFrameIntoClientArea","Ptr",hwnd,"ptr",margins) != 0) {
-			this.Err("Problem with DwmExtendFrameIntoClientArea","overlay will not function`n`nReloading the script usually fixes this`n`nError: " DllCall("GetLastError","uint"))
+		ext := DllCall("dwmapi\DwmExtendFrameIntoClientArea","Ptr",hwnd,"ptr",margins,"uint")
+		if (ext != 0) {
+			this.Err("Problem with DwmExtendFrameIntoClientArea","overlay will not function`n`nReloading the script usually fixes this`n`nError: " DllCall("GetLastError","uint") " / " ext)
 			return
 		}
 		DllCall("SetLayeredWindowAttributes","Ptr",hwnd,"Uint",0,"char",255,"uint",2)
