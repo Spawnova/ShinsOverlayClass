@@ -1,5 +1,5 @@
 # ShinsOverlayClass
-A direct2d overlay for <ins>AutoHotkey **V1.1**</ins>, made to be user friendly and fast.
+A direct2d overlay for <ins>AutoHotkey **V1.1+ and V2+**</ins>, made to be user friendly and fast.
 Supports 32bit and 64bit for systems running windows 7+ including the newest windows 11.
 
 # YouTube simple overview and examples
