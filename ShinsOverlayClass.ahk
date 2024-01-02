@@ -52,7 +52,11 @@ class ShinsOverlayClass {
 		this.realHeight := 0
 		this.realX2 := 0
 		this.realY2 := 0
-	
+		
+		this.callbacks := {"Size":0,"Position":0,"Active":0}
+		;Size 		: 		[this]
+		;Position:	:		[this]
+		;Active		:		[this,state]
 	
 	
 	
@@ -68,10 +72,11 @@ class ShinsOverlayClass {
 		this.offX := -x_orTitle
 		this.offY := -y_orClient
 		this.lastCol := 0
-		this.drawing := 0
+		this.drawing := -1
 		this.guiID := guiID := (guiID = 0 ? "ShinsOverlayClass_" a_tickcount : guiID)
 		this.owned := 0
 		this.alwaysontop := alwaysontop
+		
 		
 		this._cacheImage := this.mcode("VVdWMfZTg+wMi0QkLA+vRCQoi1QkMMHgAoXAfmSLTCQki1wkIA+26gHIiUQkCGaQD7Z5A4PDBIPBBIn4D7bwD7ZB/g+vxpn3/YkEJA+2Qf0Pr8aZ9/2JRCQED7ZB/A+vxpn3/Q+2FCSIU/wPtlQkBIhT/YhD/on4iEP/OUwkCHWvg8QMifBbXl9dw5CQkJCQ|V1ZTRTHbRItUJEBFD6/BRo0MhQAAAABFhcl+YUGD6QFFD7bSSYnQQcHpAkqNdIoERQ+2WANBD7ZAAkmDwARIg8EEQQ+vw5lB9/qJx0EPtkD9QQ+vw5lB9/pBicFBD7ZA/ECIefxEiEn9QQ+vw0SIWf+ZQff6iEH+TDnGdbNEidhbXl/DkJCQkJCQkJCQkJCQ")
 		
@@ -230,9 +235,9 @@ class ShinsOverlayClass {
 		if (this.attachHWND) {
 			if (!DllCall("GetWindowRect","Uptr",this.attachHWND,"ptr",this.tBufferPtr) or (this.attachForeground and DllCall("GetForegroundWindow","cdecl Ptr") != this.attachHWND)) {
 				if (this.drawing) {
-					DllCall(this.vTable(this.renderTarget,48),"Ptr",this.renderTarget)
-					DllCall(this.vTable(this.renderTarget,47),"Ptr",this.renderTarget,"Ptr",this.clrPtr)
-					this.EndDraw()
+					if (this.callbacks["active"])
+						this.callbacks["active"].call(this,0)
+					this.Clear()
 					this.drawing := 0
 				}
 				return 0
@@ -248,9 +253,13 @@ class ShinsOverlayClass {
 				NumPut(this.height,newSize,4,"uint")
 				DllCall(this.vTable(this.renderTarget,58),"Ptr",this.renderTarget,"ptr",&newsize)
 				this.SetPosition(x,y)
+				if (this.callbacks["size"])
+					this.callbacks["size"].call(this)
 			} else if ((x<<16)+y != this.lastPos) {
 				this.AdjustWindow(x,y,w,h)
 				this.SetPosition(x,y)
+				if (this.callbacks["position"])
+					this.callbacks["position"].call(this)
 			}
 			if (!this.drawing and this.alwaysontop) {
 				winset,alwaysontop,on,% "ahk_id " this.hwnd
@@ -259,9 +268,9 @@ class ShinsOverlayClass {
 		} else {
 			if (!DllCall("GetWindowRect","Uptr",this.hwnd,"ptr",this.tBufferPtr)) {
 				if (this.drawing) {
-					DllCall(this.vTable(this.renderTarget,48),"Ptr",this.renderTarget)
-					DllCall(this.vTable(this.renderTarget,47),"Ptr",this.renderTarget,"Ptr",this.clrPtr)
-					this.EndDraw()
+					if (this.callbacks["active"])
+						this.callbacks["active"].call(this,0)
+					this.Clear()
 					this.drawing := 0
 				}
 				return 0
@@ -277,10 +286,18 @@ class ShinsOverlayClass {
 				NumPut(this.height,newSize,4,"uint")
 				DllCall(this.vTable(this.renderTarget,58),"Ptr",this.renderTarget,"ptr",&newsize)
 				this.SetPosition(x,y)
+				if (this.callbacks["size"])
+					this.callbacks["size"].call(this)
 			} else if ((x<<16)+y != this.lastPos) {
 				this.AdjustWindow(x,y,w,h)
 				this.SetPosition(x,y)
+				if (this.callbacks["position"])
+					this.callbacks["position"].call(this)
 			}
+		}
+		if (this.drawing = 0) {
+			if (this.callbacks["active"])
+				this.callbacks["active"].call(this,1)
 		}
 		this.drawing := 1
 		DllCall(this.vTable(this.renderTarget,48),"Ptr",this.renderTarget)
@@ -919,9 +936,31 @@ class ShinsOverlayClass {
 	}
 	
 	
+	;####################################################################################################################################################################################################################################
+	;RegCallback
+	;
+	;&func						:			Function object to call
+	;&callback					:			Name of the callback to assign the function to
+	;
+	;notes						:			Example: overlay.RegCallback(Func("funcName"),"Size"); See top for param info
+	
+	RegCallback(func,callback) {
+		if (this.callbacks.haskey(callback))
+			this.callbacks[callback] := func
+	}
 	
 	
+	;####################################################################################################################################################################################################################################
+	;ClearCallback
+	;
+	;&callback					:			Name of the callback to clear functions of
+	;
+	;notes						:			Clears callback
 	
+	ClearCallback(callback) {
+		if (this.callbacks.haskey(callback))
+			this.callbacks[callback] := 0
+	}
 	
 	
 	
@@ -932,6 +971,8 @@ class ShinsOverlayClass {
 	;########################################## 
 	AdjustWindow(byref x,byref y,byref w,byref h) {
 		local
+		this.lastPos := (x<<16)+y
+		this.lastSize := (w<<16)+h
 		DllCall("GetWindowInfo","Uptr",(this.attachHWND ? this.attachHWND : this.hwnd),"ptr",this.tBufferPtr)
 		pp := (this.attachClient ? 20 : 4)
 		x1 := NumGet(this.tBufferPtr,pp,"int")
@@ -944,8 +985,7 @@ class ShinsOverlayClass {
 		this.y := y := y1
 		this.x2 := x + w
 		this.y2 := y + h
-		this.lastPos := (x1<<16)+y1
-		this.lastSize := (w<<16)+h
+		
 		hBorders := (this.attachClient ? 0 : NumGet(this.tBufferPtr,48,"int"))
 		vBorders := (this.attachClient ? 0 : NumGet(this.tBufferPtr,52,"int"))
 		this.realX := hBorders
