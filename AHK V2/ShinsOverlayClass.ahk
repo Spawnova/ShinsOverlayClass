@@ -866,6 +866,8 @@ class ShinsOverlayClass {
 	;  internal functions used by the class
 	;########################################## 
 	AdjustWindow(&x,&y,&w,&h) {
+		this.lastPos := (x<<16)+y
+		this.lastSize := (w<<16)+h
 		DllCall("GetWindowInfo","Uptr",(this.attachHWND ? this.attachHWND : this.hwnd),"ptr",this.tBufferPtr)
 		pp := (this.attachClient ? 20 : 4)
 		x1 := NumGet(this.tBufferPtr,pp,"int")
@@ -878,8 +880,6 @@ class ShinsOverlayClass {
 		this.y := y := y1
 		this.x2 := x + w
 		this.y2 := y + h
-		this.lastPos := (x1<<16)+y1
-		this.lastSize := (w<<16)+h
 		hBorders := (this.attachClient ? 0 : NumGet(this.tBufferPtr,48,"int"))
 		vBorders := (this.attachClient ? 0 : NumGet(this.tBufferPtr,52,"int"))
 		this.realX := hBorders
