@@ -18,10 +18,16 @@ BeginDraw()
 EndDraw()
 
 #DrawImage................Draw an image
-DrawImage(image,dstX,dstY,dstW:=0,dstH:=0,srcX:=0,srcY:=0,srcW:=0,srcH:=0,alpha:=1,drawCentered:=0,rotation:=0)
+DrawImage(image,dstX,dstY,dstW:=0,dstH:=0,srcX:=0,srcY:=0,srcW:=0,srcH:=0,alpha:=1,drawCentered:=0,rotation:=0,rotOffX:=0,rotOffY:=0)
 
 #DrawText.................Draws text, supports a dropshadow if a valid color is supplied
 DrawText(text,x,y,size:=18,color:=0xFF000000,fontName:="Arial",extraOptions:="") #see the comments above the function in the class file for more info
+
+#GetTextMetrics..........Get the dimensions of text
+GetTextMetrics(text, size, fontName, maxWidth:=5000, maxHeight:=5000)
+
+#SetTextRenderParams.....Set additional parameters for text
+SetTextRenderParams(gamma:=1, contrast:=0, cleartype:=1, pixelGeom:=0, renderMode:=0)
 
 #DrawEllipse..............Draws an ellipse
 DrawEllipse(x, y, w, h, color, thickness:=1)
@@ -67,6 +73,15 @@ GetImageDimensions(image,byref w, byref h)
 
 #GetMousePosition.........Gets the mouse position relative to the overlay, additionally returns true if the mouse is inside the overlay, 0 otherwise
 GetMousePos(byref x, byref y, realRegionOnly:=0)
+
+#Clear...................Clears the canvas
+Clear()
+
+#RegCallback............Register a function to call when an event happens
+RegCallback(func, callback) ;Size, Position, Active
+
+#ClearCallback.........Clear a callback
+ClearCallback(callback)
 ```
 
 ## Notes
