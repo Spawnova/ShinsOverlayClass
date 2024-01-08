@@ -194,7 +194,10 @@ class ShinsOverlayClass {
 			this.Err("AttachToWindow: Error","Problem getting window rect, is window minimized?`n`nError: " DllCall("GetLastError","uint"))
 			return 0
 		}
-		
+		x := NumGet(this.tBufferPtr,0,"int")
+		y := NumGet(this.tBufferPtr,4,"int")
+		w := NumGet(this.tBufferPtr,8,"int")-x
+		h := NumGet(this.tBufferPtr,12,"int")-y
 		this.attachClient := AttachToClientArea
 		this.attachForeground := foreground
 		this.AdjustWindow(&x,&y,&w,&h)
