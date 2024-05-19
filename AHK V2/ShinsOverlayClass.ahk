@@ -230,12 +230,10 @@ class ShinsOverlayClass {
 		local pOut := 0
 		if (this.attachHWND) {
 			if (!DllCall("GetWindowRect","Uptr",this.attachHWND,"ptr",this.tBufferPtr) or (this.attachForeground and DllCall("GetForegroundWindow","cdecl Ptr") != this.attachHWND)) {
-				if (this.drawing) {
-					DllCall(this.vTable(this.renderTarget,48),"Ptr",this.renderTarget)
-					DllCall(this.vTable(this.renderTarget,47),"Ptr",this.renderTarget,"Ptr",this.clrPtr)
-					this.EndDraw()
+				;if (this.drawing) {
+					this.Clear()
 					this.drawing := 0
-				}
+				;}
 				return 0
 			}
 			x := NumGet(this.tBufferPtr,0,"int")
@@ -260,9 +258,7 @@ class ShinsOverlayClass {
 		} else {
 			if (!DllCall("GetWindowRect","Uptr",this.hwnd,"ptr",this.tBufferPtr)) {
 				if (this.drawing) {
-					DllCall(this.vTable(this.renderTarget,48),"Ptr",this.renderTarget)
-					DllCall(this.vTable(this.renderTarget,47),"Ptr",this.renderTarget,"Ptr",this.clrPtr)
-					this.EndDraw()
+					this.Clear()
 					this.drawing := 0
 				}
 				return 0
@@ -283,10 +279,18 @@ class ShinsOverlayClass {
 				this.SetPosition(x,y)
 			}
 		}
-		this.drawing := 1
-		DllCall(this.vTable(this.renderTarget,48),"Ptr",this.renderTarget)
-		DllCall(this.vTable(this.renderTarget,47),"Ptr",this.renderTarget,"Ptr",this.clrPtr)
-		return 1
+
+		if (DllCall(this.vTable(this.renderTarget,48),"Ptr",this.renderTarget) = 0) {
+			DllCall(this.vTable(this.renderTarget,47),"Ptr",this.renderTarget,"Ptr",this.clrPtr)
+			if (this.drawing = 0) {
+				;if (this.callbacks["active"])
+					;this.callbacks["active"].call(this,1) ;not implemented yet
+			}
+			this.drawing := 1
+			return 1
+		}
+		this.drawing := 0
+		return 0
 	}
 	
 	
