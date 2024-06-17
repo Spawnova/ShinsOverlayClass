@@ -92,7 +92,7 @@ class ShinsOverlayClass {
 		this.hwnd := hwnd := this.gui.hwnd
 		DllCall("ShowWindow","Uptr",this.hwnd,"uint",(clickThrough ? 8 : 1))
 
-		OnMessage(0x14,this.OnErase.Bind(this))
+		OnMessage(0x14,"ShinsOverlayClass_OnErase")
 
 		this.tBufferPtr := Buffer(4096,0)
 		this.rect1Ptr :=  Buffer(64,0)
@@ -1052,7 +1052,7 @@ class ShinsOverlayClass {
 			return p
 		DllCall("GlobalFree", "ptr", p)
 	}
-	OnErase() {
-		return 0
-	}
+}
+ShinsOverlayClass_OnErase() {
+	return 0
 }
