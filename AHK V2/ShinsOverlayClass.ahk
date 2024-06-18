@@ -1053,6 +1053,6 @@ class ShinsOverlayClass {
 		DllCall("GlobalFree", "ptr", p)
 	}
 }
-ShinsOverlayClass_OnErase() {
+ShinsOverlayClass_OnErase(*) {
 	return 0
 }
