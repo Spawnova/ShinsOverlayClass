@@ -1079,6 +1079,11 @@ class ShinsOverlayClass {
 		DllCall(this.vTable(this.renderTarget,41),"Ptr",this.renderTarget)
 	}
 	
+	;0 = off
+	;1 = on
+	SetAntialias(state:=0) {
+		DllCall(this.vTable(this.renderTarget,32),"Ptr",this.renderTarget,"Uint",!state)
+	}
 	
 	
 	
