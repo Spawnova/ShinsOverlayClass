@@ -29,6 +29,7 @@ class ShinsOverlayClass {
 		
 		this.interpolationMode := 0 ;0 = nearestNeighbor, 1 = linear ;affects DrawImage() scaling 
 		this.data := Map()			;reserved name for general data storage
+		this.HideOnStateChange := 1 ;hides or shows the overlay when attached windows state changes, change to 0 to turn this behaviour off
 	
 	
 		;[output variables] you can read these to get extra info, DO NOT MODIFY THESE
@@ -236,6 +237,8 @@ class ShinsOverlayClass {
 				if (this.drawing) {
 					this.Clear()
 					this.drawing := 0
+					if (this.HideOnStateChange)
+						this.Display(0)
 				}
 				return 0
 			}
@@ -288,6 +291,8 @@ class ShinsOverlayClass {
 		if (this.drawing = 0) {
 			;if (this.callbacks["active"])
 				;this.callbacks["active"].call(this,1) ;not implemented yet
+			if (this.HideOnStateChange)
+				this.Display(1)
 		}
 		return this.drawing := 1
 	}
@@ -1057,6 +1062,13 @@ class ShinsOverlayClass {
 		if (DllCall("crypt32\CryptStringToBinary", "str", s[this.bits+1], "uint", 0, "uint", 1, "ptr", p, "uint*", &pp, "ptr", 0, "ptr", 0))
 			return p
 		DllCall("GlobalFree", "ptr", p)
+	}
+	Display(state) {
+		if (!state) {
+			WinHide("ahk_id " this.hwnd)
+		} else {
+			WinShow("ahk_id " this.hwnd)
+		}
 	}
 }
 ShinsOverlayClass_OnErase(*) {
