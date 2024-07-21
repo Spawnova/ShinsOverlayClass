@@ -1065,9 +1065,9 @@ class ShinsOverlayClass {
 	}
 	Display(state) {
 		if (!state) {
-			WinHide("ahk_id " this.hwnd)
+			DllCall("User32.dll\ShowWindow","Ptr",this.hwnd,"Int",0)
 		} else {
-			WinShow("ahk_id " this.hwnd)
+			DllCall("User32.dll\ShowWindow","Ptr",this.hwnd,"Int",4)
 		}
 	}
 }
