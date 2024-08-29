@@ -73,6 +73,7 @@ class ShinsOverlayClass {
 		this.guiID := (guiID = 0 ? "ShinsOverlayClass_" a_tickcount : guiID)
 		this.owned := 0
 		this.lastSize := 0
+		this.notifyActive := 0
 		this.alwaysontop := alwaysontop
 		pOut := 0
 		
@@ -241,6 +242,9 @@ class ShinsOverlayClass {
 						this.Display(0)
 				}
 				return 0
+			} else if (!this.drawing) {
+				if (this.HideOnStateChange)
+					this.Display(1)
 			}
 			x := NumGet(this.tBufferPtr,0,"int")
 			y := NumGet(this.tBufferPtr,4,"int")
@@ -288,11 +292,10 @@ class ShinsOverlayClass {
 
 		DllCall(this._BeginDraw,"Ptr",this.renderTarget)
 		DllCall(this._Clear,"Ptr",this.renderTarget,"Ptr",this.clrPtr)
-		if (this.drawing = 0) {
+		if (this.notifyActive) {
 			;if (this.callbacks["active"])
 				;this.callbacks["active"].call(this,1) ;not implemented yet
-			if (this.HideOnStateChange)
-				this.Display(1)
+			this.notifyActive := 0
 		}
 		return this.drawing := 1
 	}
@@ -1068,6 +1071,7 @@ class ShinsOverlayClass {
 			DllCall("User32.dll\ShowWindow","Ptr",this.hwnd,"Int",0)
 		} else {
 			DllCall("User32.dll\ShowWindow","Ptr",this.hwnd,"Int",4)
+			this.notifyActive := 1
 		}
 	}
 }
