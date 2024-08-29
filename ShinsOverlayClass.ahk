@@ -76,6 +76,7 @@ class ShinsOverlayClass {
 		this.drawing := -1
 		this.guiID := guiID := (guiID = 0 ? "ShinsOverlayClass_" a_tickcount : guiID)
 		this.owned := 0
+		this.notifyActive := 0
 		this.alwaysontop := alwaysontop
 		
 		
@@ -254,6 +255,9 @@ class ShinsOverlayClass {
 						this.Display(0)
 				}
 				return 0
+			} else if (!this.drawing) {
+				if (this.HideOnStateChange)
+					this.Display(1)
 			}
 			x := NumGet(this.tBufferPtr,0,"int")
 			y := NumGet(this.tBufferPtr,4,"int")
@@ -311,11 +315,10 @@ class ShinsOverlayClass {
 		
 		DllCall(this._BeginDraw,"Ptr",this.renderTarget)
 		DllCall(this._Clear,"Ptr",this.renderTarget,"Ptr",this.clrPtr)
-		if (this.drawing = 0) {
+		if (this.notifyActive) {
 			if (this.callbacks["active"])
 				this.callbacks["active"].call(this,1)
-			if (this.HideOnStateChange)
-				this.Display(1)
+			this.notifyActive := 0
 		}
 		return this.drawing := 1
 	}
@@ -409,10 +412,11 @@ class ShinsOverlayClass {
 	;
 	;Notes				;				Used to measure a string before drawing it
 	
-	GetTextMetrics(text,size,fontName,maxWidth:=5000,maxHeight:=5000) {
+	GetTextMetrics(text,size,fontName,bold:=0,maxWidth:=5000,maxHeight:=5000) {
 		local
-		if (!p := this.fonts[fontName size "400"]) {
-			p := this.CacheFont(fontName,size)
+		bold := (bold ? "700" : "400")
+		if (!p := this.fonts[fontName size bold]) {
+			p := this.CacheFont(fontName,size,bold)
 		}
 		varsetcapacity(bf,64)
 		DllCall(this.vTable(this.wFactory,18),"ptr",this.wFactory,"WStr",text,"uint",strlen(text),"Ptr",p,"float",maxWidth,"float",maxHeight,"Ptr*",layout)
@@ -1288,6 +1292,7 @@ class ShinsOverlayClass {
 		} else {
 			DllCall("User32.dll\ShowWindow","Ptr",this.hwnd,"Int",4)
 		}
+		this.notifyActive := 1
 	}
 }
 ShinsOverlayClass_OnErase() {
