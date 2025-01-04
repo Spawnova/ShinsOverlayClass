@@ -103,8 +103,8 @@ class ShinsOverlayClass {
 		this.hwnd := hwnd
 		DllCall("ShowWindow","Uptr",this.hwnd,"uint",(clickThrough ? 8 : 1))
 
-		OnMessage(0x14,"ShinsOverlayClass_OnErase")
-
+		OnMessage(0x14, this.OnErase.Bind(this))
+		
 		this.tBufferPtr := this.SetVarCapacity("ttBuffer",4096)
 		this.rect1Ptr := this.SetVarCapacity("_rect1",64)
 		this.rect2Ptr := this.SetVarCapacity("_rect2",64)
@@ -1294,7 +1294,9 @@ class ShinsOverlayClass {
 		}
 		this.notifyActive := 1
 	}
-}
-ShinsOverlayClass_OnErase() {
-	return 0
+	OnErase(wParam, lParam, msg, hwnd) {
+		if (hwnd = this.hwnd)
+			return 0
+		return 1
+	}
 }
