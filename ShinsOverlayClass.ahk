@@ -103,7 +103,8 @@ class ShinsOverlayClass {
 		this.hwnd := hwnd
 		DllCall("ShowWindow","Uptr",this.hwnd,"uint",(clickThrough ? 8 : 1))
 
-		OnMessage(0x14, this.OnErase.Bind(this))
+		this.OnEraseFunc := this.OnErase.Bind(this)
+		OnMessage(0x14, this.OnEraseFunc)
 		
 		this.tBufferPtr := this.SetVarCapacity("ttBuffer",4096)
 		this.rect1Ptr := this.SetVarCapacity("_rect1",64)
@@ -1095,6 +1096,9 @@ class ShinsOverlayClass {
 	}
 	
 	
+	DisableOnErase() {
+		OnMessage(0x14, this.OnEraseFunc,0)
+	}
 	
 	
 	;########################################## 
@@ -1245,6 +1249,7 @@ class ShinsOverlayClass {
 		return this.fonts[name size bold] := textFormat
 	}
 	__Delete() {
+
 		DllCall("gdiplus\GdiplusShutdown", "Ptr*", this.gdiplusToken)
 		DllCall(this.vTable(this.factory,2),"ptr",this.factory)
 		DllCall(this.vTable(this.stroke,2),"ptr",this.stroke)
@@ -1254,6 +1259,7 @@ class ShinsOverlayClass {
 		DllCall(this.vTable(this.wfactory,2),"ptr",this.wfactory)
 		guiID := this.guiID
 		gui %guiID%:destroy
+		OnMessage(0x14, this.OnEraseFunc,0)
 	}
 	InitFuncs() {
 		this._DrawText := this.vTable(this.renderTarget,27)
@@ -1297,6 +1303,5 @@ class ShinsOverlayClass {
 	OnErase(wParam, lParam, msg, hwnd) {
 		if (hwnd = this.hwnd)
 			return 0
-		return 1
 	}
 }
