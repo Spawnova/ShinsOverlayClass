@@ -94,7 +94,7 @@ class ShinsOverlayClass {
 		this.hwnd := hwnd := this.gui.hwnd
 		DllCall("ShowWindow","Uptr",this.hwnd,"uint",(clickThrough ? 8 : 1))
 
-		this.OnEraseFunc := ObjBindMethod(this,"OnErase")
+		this.OnEraseFunc := _SOC_ONERASE.bind(hwnd)
 		OnMessage(0x14,this.OnEraseFunc)
 		
 		this.tBufferPtr := Buffer(4096,0)
@@ -1036,8 +1036,16 @@ class ShinsOverlayClass {
 		DllCall(this.vTable(this.renderTarget,2),"ptr",this.renderTarget)
 		DllCall(this.vTable(this.brush,2),"ptr",this.brush)
 		DllCall(this.vTable(this.wfactory,2),"ptr",this.wfactory)
+		DllCall("GlobalFree", "ptr", this._cacheImage)
+		for k,v in this.fonts {
+			DllCall(this.vTable(v,2),"ptr",v)
+		}
+		for k,v in this.imageCache {
+			DllCall(this.vTable(v.p,2),"ptr",v.p)
+		}
 		this.gui.destroy()
 		OnMessage(0x14,this.OnEraseFunc,0)
+		this.OnEraseFunc := ""
 	}
 	InitFuncs() {
 		this._DrawText := this.vTable(this.renderTarget,27)
@@ -1078,8 +1086,8 @@ class ShinsOverlayClass {
 		}
 		this.notifyActive := 1
 	}
-	OnErase(wParam, lParam, msg, hwnd) {
-		if (hwnd = this.hwnd)
-			return 0
-	}
+}
+_SOC_ONERASE(oHwnd, wParam, lParam, msg, hwnd) {
+	if (oHwnd = hwnd)
+		return 0
 }
