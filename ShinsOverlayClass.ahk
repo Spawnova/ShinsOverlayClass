@@ -102,8 +102,8 @@ class ShinsOverlayClass {
 		
 		this.hwnd := hwnd
 		DllCall("ShowWindow","Uptr",this.hwnd,"uint",(clickThrough ? 8 : 1))
-
-		this.OnEraseFunc := this.OnErase.Bind(this)
+		
+		this.OnEraseFunc := Func("_SOC_ONERASE").Bind(hwnd)
 		OnMessage(0x14, this.OnEraseFunc)
 		
 		this.tBufferPtr := this.SetVarCapacity("ttBuffer",4096)
@@ -1101,6 +1101,12 @@ class ShinsOverlayClass {
 	}
 	
 	
+	Release() {
+		this.DisableOnErase()
+		this.OnEraseFunc := ""
+		this.__Delete()
+	}
+	
 	;########################################## 
 	;  internal functions used by the class
 	;########################################## 
@@ -1169,7 +1175,7 @@ class ShinsOverlayClass {
 	}
 	LoadLib(lib*) {
 		for k,v in lib
-			if (!DllCall("GetModuleHandle", "str", v, "Ptr"))
+			if (!DllCall("GetModuleHandle", "str", v, "Ptr")) {
 				DllCall("LoadLibrary", "Str", v) 
 	}
 	SetBrushColor(col) {
@@ -1249,7 +1255,6 @@ class ShinsOverlayClass {
 		return this.fonts[name size bold] := textFormat
 	}
 	__Delete() {
-
 		DllCall("gdiplus\GdiplusShutdown", "Ptr*", this.gdiplusToken)
 		DllCall(this.vTable(this.factory,2),"ptr",this.factory)
 		DllCall(this.vTable(this.stroke,2),"ptr",this.stroke)
@@ -1257,9 +1262,16 @@ class ShinsOverlayClass {
 		DllCall(this.vTable(this.renderTarget,2),"ptr",this.renderTarget)
 		DllCall(this.vTable(this.brush,2),"ptr",this.brush)
 		DllCall(this.vTable(this.wfactory,2),"ptr",this.wfactory)
+		DllCall("GlobalFree", "ptr", this._cacheImage)
+		DllCall("GlobalFree", "ptr", this._dtc)
+		for k,v in this.fonts
+			DllCall(this.vTable(v,2),"ptr",v)
+		for k,v in this.imageCache
+			DllCall(this.vTable(v.p,2),"ptr",v.p)
 		guiID := this.guiID
 		gui %guiID%:destroy
 		OnMessage(0x14, this.OnEraseFunc,0)
+		this.OnEraseFunc := ""
 	}
 	InitFuncs() {
 		this._DrawText := this.vTable(this.renderTarget,27)
@@ -1300,8 +1312,8 @@ class ShinsOverlayClass {
 		}
 		this.notifyActive := 1
 	}
-	OnErase(wParam, lParam, msg, hwnd) {
-		if (hwnd = this.hwnd)
-			return 0
-	}
+}
+_SOC_ONERASE(oHwnd, wParam, lParam, msg, hwnd) {
+	if (oHwnd = hwnd)
+		return 0
 }
