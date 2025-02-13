@@ -1174,9 +1174,11 @@ class ShinsOverlayClass {
 		msgbox,% 0x30 | 0x1000,% "Problem!",% s
 	}
 	LoadLib(lib*) {
-		for k,v in lib
+		for k,v in lib {
 			if (!DllCall("GetModuleHandle", "str", v, "Ptr")) {
 				DllCall("LoadLibrary", "Str", v) 
+			}
+		}
 	}
 	SetBrushColor(col) {
 		if (col <= 0xFFFFFF)
@@ -1193,7 +1195,8 @@ class ShinsOverlayClass {
 		return 0
 	}
 	vTable(a,p) {
-		return NumGet(NumGet(a+0,0,"ptr"),p*a_ptrsize,"Ptr")
+		v := NumGet(a+0,0,"ptr")
+		return (v ? NumGet(v+0,p*a_ptrsize,"Ptr") : 0)
 	}
 	_guid(guidStr,byref clsid) {
 		VarSetCapacity(clsid,16)
@@ -1264,10 +1267,16 @@ class ShinsOverlayClass {
 		DllCall(this.vTable(this.wfactory,2),"ptr",this.wfactory)
 		DllCall("GlobalFree", "ptr", this._cacheImage)
 		DllCall("GlobalFree", "ptr", this._dtc)
-		for k,v in this.fonts
-			DllCall(this.vTable(v,2),"ptr",v)
-		for k,v in this.imageCache
-			DllCall(this.vTable(v.p,2),"ptr",v.p)
+		for k,v in this.fonts {
+			if (v and this.vTable(v,2)) {
+				DllCall(this.vTable(v,2),"ptr",v)
+			}
+		}
+		for k,v in this.imageCache {
+			if (v.p and this.vTable(v.p,2)) {
+				DllCall(this.vTable(v.p,2),"ptr",v.p)
+			}
+		}
 		guiID := this.guiID
 		gui %guiID%:destroy
 		OnMessage(0x14, this.OnEraseFunc,0)
